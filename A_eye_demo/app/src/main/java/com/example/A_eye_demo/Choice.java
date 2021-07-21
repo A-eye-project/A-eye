@@ -8,15 +8,17 @@ import java.util.Arrays;
 
 public class Choice extends Application {
     public static String my_str;
-    public static String sample_ocr[] = {" 읽어줘"," 읽어주세요"};
-    public static String sample_image[] = {" 설명해줘", " 알려줘"};
-    public static String Sample [][] = {sample_ocr,sample_image};
-    public static int Score [] = {0,0};
-    public static int num = -1;
+    public static String sample_image[] = {" 설명해", " 묘사해", " 말해"};
+    public static int Score_image;
+    public static boolean OCR_Flag;
+    public static int num;
     @Override
     public void onCreate(){
         super.onCreate();
         my_str = "";
+        num = -1;
+        Score_image = 0;
+        OCR_Flag = false;
     }
 
     public void Set_str(String str){
@@ -28,16 +30,19 @@ public class Choice extends Application {
         Log.i("test",my_str);
     }
     public void Local_Alignment(){
-        Score[0] = 0;
-        Score[1] = 0;
-        int m = my_str.length();
-        int match = 30;
-        int miss_match = -2;
-        int gap = -2;
+        Score_image = 0;
+        OCR_Flag = false;
         String x = my_str;
-        for(int T=0;T<Sample.length;++T){
-            for(int s = 0 ; s < Sample[T].length; ++s){
-                String y = Sample[T][s];
+        if(x.contains("읽어")){// OCR
+            OCR_Flag = true;
+        }
+        else{ // Get Image Captioning Score
+            int m = my_str.length();
+            int match = 20;
+            int miss_match = -2;
+            int gap = -2;
+            for(int s = 0 ; s < sample_image.length; ++s){
+                String y = sample_image[s];
                 int i,j;
                 int n = y.length();
                 //Log.i("len",Integer.toString(m) + ", " + Integer.toString(n));
@@ -52,16 +57,6 @@ public class Choice extends Application {
                 }
                 for(i=1;i<m;++i) {
                     for (j = 1; j <n; ++j) {
-                        /*
-                        if (x.charAt(i - 1) == y.charAt(j - 1)) {
-                            dp[i][j] = dp[i - 1][j - 1];
-                        } else {
-                            dp[i][j] = Math.min(Math.min(dp[i - 1][j - 1] + match,
-                                    dp[i - 1][j] + gap),
-                                    dp[i][j - 1] + gap);
-                        }*/
-
-                        //Log.i("count", Integer.toString(i) + ", " + Integer.toString(j));
                         if(x.charAt(i) == y.charAt(j)) {
                             dp[i][j] += Math.max(
                                     dp[i - 1][j - 1] + match, Math.max(dp[i][j - 1] + gap,dp[i - 1][j] + gap));
@@ -72,24 +67,19 @@ public class Choice extends Application {
                         }
                     }
                 }
-                Log.i("score",Integer.toString(dp[m-1][n-1]) + ", " + Integer.toString(dp[m-1][n-1]));
-                Score[T] = Math.max(Score[T], dp[m-1][n-1]);
+                //Log.i("score",Integer.toString(dp[m-1][n-1]) + ", " + Integer.toString(dp[m-1][n-1]));
+                Score_image = Math.max(Score_image, dp[m-1][n-1]);
             }
         }
     }
     public int info(){
-        if(Math.max(Score[0],Score[1]) > 50){
-            if(Score[0] > Score[1]){
-                num = 0;
-            }
-            else{
-                num = 1;
-            }
+        if(OCR_Flag == true){ // OCR
+            num = 0;
         }
-
-        Log.i("my_score",Integer.toString(Score[0]) + ", " + Integer.toString(Score[1]));
-
-        if(num == -1){
+        else if(Score_image > 30){ // Image captioning
+            num = 1;
+        }
+        else{ // VQA
             num = 2;
         }
         return num;

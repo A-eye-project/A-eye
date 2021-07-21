@@ -15,11 +15,10 @@ import android.widget.TextView;
 
 /*
 전체적인 과정
-ㄷ
 1. "adam" 호출
 2. 3초간 음성 명령
 3. Texture View 실행
-4. Camera  Open후 3초뒤 촬영  (pictureHandler로 시간 조절)
+4. Camera  Open후 3초뒤 촬영  (pictureHandler로 시간 조절), 내부 저장소에 .jpg형태로 사진 저장
 5. 이미지 경로 Data_Storage에 저장
 6. MainActivity에서 Data_Storage의 Flag 확인
 7. Flag == true일 경우 Image_view에서 촬영했던 이미지 보여줌.
