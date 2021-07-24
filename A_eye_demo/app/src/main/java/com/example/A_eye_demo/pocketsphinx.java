@@ -9,6 +9,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.A_eye_demo.Record.Record;
+import com.example.A_eye_demo.support.Choice;
 
 import java.io.File;
 import java.io.IOException;
@@ -86,7 +87,7 @@ public class pocketsphinx implements RecognitionListener {
 
         String text = hypothesis.getHypstr();
         if (text.equals(KEYPHRASE)) {
-            makeToast("Found");
+            //makeToast("Found");
             recognizer.stop();
         }
     }
@@ -95,7 +96,6 @@ public class pocketsphinx implements RecognitionListener {
     public void onResult(Hypothesis hypothesis) {
         if (hypothesis != null) {
             String text = hypothesis.getHypstr();
-            Log.e("onResult", text);
             get_record_string();
         }
     }
@@ -157,7 +157,6 @@ public class pocketsphinx implements RecognitionListener {
                 myText.setText("Reconizing.. ");
                 int status = myRecord.net_com(); // 녹음 파일 -> String으로 바꾸는 API 통신 , return값은 통신 상태
                 if(status == 1){
-                    makeToast("통신완료");
                     Result = myRecord.get_re();
                     myText.setText(Result);
                     get_num();

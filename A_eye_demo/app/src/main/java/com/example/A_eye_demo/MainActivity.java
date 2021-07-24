@@ -2,15 +2,19 @@ package com.example.A_eye_demo;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
-import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.example.A_eye_demo.support.Data_storage;
+import com.example.A_eye_demo.support.PermissionSupport;
+
+import static android.widget.Toast.makeText;
 
 
 /*
@@ -27,8 +31,10 @@ import android.widget.TextView;
 public class MainActivity extends AppCompatActivity {
     private pocketsphinx pocketTEST;
     TextView tv;
+    int count_time;
     // 마이크 권한
     private static final int PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
+    private PermissionSupport permission;
 
     @Override
     public void onCreate(Bundle state) {
@@ -36,29 +42,52 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         tv = (TextView)findViewById(R.id.caption_id);
         // 권한 부여 확인
-        int permissionCheck = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.RECORD_AUDIO);
-        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, PERMISSIONS_REQUEST_RECORD_AUDIO);
-            return;
-        }
+        permissionCheck();
+        count_time = 0;
         // 인식기 초기화
-        // 비동기 테스크 이용
         pocketTEST = new pocketsphinx(this, tv);
-        pocketTEST.onSetup();
-    }
 
+    }
+    public void permissionCheck(){
+        if(Build.VERSION.SDK_INT >= 23){
+            permission = new PermissionSupport(this,this);
+            if(!permission.checkPermission()){
+                permission.requestPermission();
+            }
+        }
+    }
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        if (requestCode == PERMISSIONS_REQUEST_RECORD_AUDIO) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                pocketTEST.onSetup();
-            } else {
-                finish();
-            }
+        if (!permission.permissionsResult(requestCode,permissions,grantResults)){
+            makeToast("권한설정을 완료해 주세요");
+            permission.requestPermission();
+        }
+    }
+    private void makeToast(String msg) {
+        makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
+    }
+    @Override
+    public void onStart(){
+        //Log.i("log","What the hell!!!!!!!!!!!!!!!!!");
+        count_time += 1;
+        if(count_time == 10) finish();
+        super.onStart();
+        if(permission.checkPermission()) {
+            // 비동기 테스크 이용
+            pocketTEST.onSetup();
+        }
+        else{
+            Handler n = new Handler();
+            n.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    onStart();
+                }
+            },1000); //
         }
     }
     @Override
@@ -70,13 +99,11 @@ public class MainActivity extends AppCompatActivity {
         }
         else{
             tv.setText("Tell me one more 'adam'");
-            pocketTEST.onSetup();
         }
     }
     @Override
     public void onDestroy() {
         super.onDestroy();
-        pocketTEST.cancel();
+        if(permission.checkPermission()) pocketTEST.cancel();
     }
-
 }

@@ -1,4 +1,4 @@
-package com.example.A_eye_demo;
+package com.example.A_eye_demo.support;
 
 import android.app.Application;
 
@@ -15,5 +15,8 @@ public class Data_storage extends Application {
         img = null;
         img_path = "";
         super.onCreate();
+    }
+    public Bitmap getImg(){
+        return img;
     }
 }

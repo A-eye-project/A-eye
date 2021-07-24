@@ -1,4 +1,4 @@
-package com.example.A_eye_demo;
+package com.example.A_eye_demo.support;
 
 
 import android.app.Application;

@@ -44,7 +44,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 
-import com.example.A_eye_demo.Data_storage;
+import com.example.A_eye_demo.support.Data_storage;
 import com.example.A_eye_demo.R;
 
 import java.io.File;
@@ -59,6 +59,11 @@ import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+
+/*
+pictureHandler -> 사진찰영 시간 조절
+Data_storage -> 사진 경로 저장
+ */
 public class Camera_Fragment extends Fragment
         implements ActivityCompat.OnRequestPermissionsResultCallback {
 
@@ -66,7 +71,6 @@ public class Camera_Fragment extends Fragment
      * Conversion from screen rotation to JPEG orientation.
      */
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
-    private static final int REQUEST_CAMERA_PERMISSION = 1;
     private static final String FRAGMENT_DIALOG = "dialog";
 
     static {
@@ -80,7 +84,6 @@ public class Camera_Fragment extends Fragment
      * Tag for the {@link Log}.
      */
     private static final String TAG = "Camera_Fragment";
-    private static String permission = "카메라 권한요청이 필요합니다.";
     private static String camera_error = "Camera2 API를 지원하지 않는 기기입니다.";
     /**
      * Camera state: Showing camera preview.
@@ -470,6 +473,7 @@ public class Camera_Fragment extends Fragment
             activity.finish();
         }
     }
+    /*
     private void requestCameraPermission() {
         if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
             new ConfirmationDialog().show(getChildFragmentManager(), FRAGMENT_DIALOG);
@@ -489,7 +493,7 @@ public class Camera_Fragment extends Fragment
         } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
-    }
+    }*/
 
     /**
      * Sets up member variables related to camera.
@@ -616,7 +620,6 @@ public class Camera_Fragment extends Fragment
     private void openCamera(int width, int height) {
         if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
-            requestCameraPermission();
             return;
         }
         setUpCameraOutputs(width, height);
@@ -755,7 +758,7 @@ public class Camera_Fragment extends Fragment
                 public void run(){
                     takePicture();
                 }
-            },3000); // 2초 후 촬영
+            },3000); // 3초 후 촬영
 
         } catch (CameraAccessException e) {
             e.printStackTrace();
@@ -892,10 +895,6 @@ public class Camera_Fragment extends Fragment
      * @return The JPEG orientation (one of 0, 90, 270, and 360)
      */
     private int getOrientation(int rotation) {
-        // Sensor orientation is 90 for most devices, or 270 for some devices (eg. Nexus 5X)
-        // We have to take that into account and rotate JPEG properly.
-        // For devices with orientation of 90, we simply return our mapping from ORIENTATIONS.
-        // For devices with orientation of 270, we need to rotate the JPEG 180 degrees.
         return (ORIENTATIONS.get(rotation) + mSensorOrientation + 270) % 360;
     }
 
@@ -1021,7 +1020,7 @@ public class Camera_Fragment extends Fragment
 
     /**
      * Shows OK/Cancel confirmation dialog about camera permission.
-     */
+
     public static class ConfirmationDialog extends DialogFragment {
 
         @NonNull
@@ -1049,6 +1048,6 @@ public class Camera_Fragment extends Fragment
                             })
                     .create();
         }
-    }
+    }*/
 
 }

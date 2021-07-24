@@ -8,6 +8,8 @@ import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.A_eye_demo.support.Data_storage;
+
 import java.io.File;
 
 public class Image_view extends AppCompatActivity {
