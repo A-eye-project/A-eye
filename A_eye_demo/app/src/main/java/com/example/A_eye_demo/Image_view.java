@@ -4,22 +4,28 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-
+import static android.speech.tts.TextToSpeech.ERROR;
 import com.example.A_eye_demo.support.Data_storage;
 
 import java.io.File;
+import java.util.Locale;
 
 public class Image_view extends AppCompatActivity {
     ImageView image_view;
+    TextView textViewv;
     Bitmap myBitmap;
+    private TextToSpeech tts;
     @Override
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         setContentView(R.layout.sample_image_view);
         image_view = (ImageView)findViewById(R.id.imageView);
+        textViewv = (TextView)findViewById(R.id.result_text);
         File files = new File(Data_storage.img_path);
         if(files.exists()==true) {
             myBitmap = BitmapFactory.decodeFile(files.getAbsolutePath());
@@ -27,6 +33,17 @@ public class Image_view extends AppCompatActivity {
             image_view.setImageBitmap(Data_storage.img);
         }
         Data_storage.Flag=false;
+        tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if (status!= ERROR){
+                    tts.setLanguage(Locale.KOREAN);
+                    tts.setSpeechRate(0.8f);
+                }
+            }
+        });
+
+        //tts.speak(res, Data_storage.ttxString.QUEUE_FLUSH, null);
     }
 
     public Bitmap Rotate_bitmap(Bitmap myimg){

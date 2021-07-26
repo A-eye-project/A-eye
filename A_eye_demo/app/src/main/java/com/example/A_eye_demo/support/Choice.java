@@ -8,7 +8,7 @@ import java.util.Arrays;
 
 public class Choice extends Application {
     public static String my_str;
-    public static String sample_image[] = {" 설명해", " 묘사해", " 말해"};
+    public static String sample_image[] = {" 설명해", " 묘사해", " 말해","알려","알려"};
     public static int Score_image;
     public static boolean OCR_Flag;
     public static int num;
@@ -81,7 +81,9 @@ public class Choice extends Application {
         }
         else{ // VQA
             num = 2;
+            Data_storage.question = my_str;
         }
+        Data_storage.choice = num;
         return num;
     }
 }

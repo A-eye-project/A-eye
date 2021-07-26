@@ -481,7 +481,6 @@ public class Camera_Fragment extends Fragment
             requestPermissions(new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
         }
     }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
@@ -870,8 +869,6 @@ public class Camera_Fragment extends Fragment
                 public void onCaptureCompleted(@NonNull CameraCaptureSession session,
                                                @NonNull CaptureRequest request,
                                                @NonNull TotalCaptureResult result) {
-                    showToast("Saved: " + mFile);
-                    Log.d(TAG, mFile.toString());
                     Data_storage.img_path = mFile.toString();
                     Data_storage.Flag = true;
                     unlockFocus();
@@ -1017,37 +1014,5 @@ public class Camera_Fragment extends Fragment
         }
 
     }
-
-    /**
-     * Shows OK/Cancel confirmation dialog about camera permission.
-
-    public static class ConfirmationDialog extends DialogFragment {
-
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            final Fragment parent = getParentFragment();
-            return new AlertDialog.Builder(getActivity())
-                    .setMessage("권한설정입니다.")
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            parent.requestPermissions(new String[]{Manifest.permission.CAMERA},
-                                    REQUEST_CAMERA_PERMISSION);
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel,
-                            new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    Activity activity = parent.getActivity();
-                                    if (activity != null) {
-                                        activity.finish();
-                                    }
-                                }
-                            })
-                    .create();
-        }
-    }*/
 
 }
