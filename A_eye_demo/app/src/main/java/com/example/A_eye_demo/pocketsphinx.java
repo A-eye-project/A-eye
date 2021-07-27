@@ -29,7 +29,8 @@ public class pocketsphinx implements RecognitionListener {
     private static final String KEYPHRASE = "adam";
     //변수
     private Handler mHandler;
-
+    public boolean isalive = false; // setup 여부
+    public boolean Flag = false; // 권한 설정 완료 됐는지 여부.
     String Result;
 
     // 디코더
@@ -43,6 +44,7 @@ public class pocketsphinx implements RecognitionListener {
     }
 
     public void onSetup() {
+        isalive = true;
         new setupTask(this).execute();
     }
 
@@ -133,6 +135,7 @@ public class pocketsphinx implements RecognitionListener {
     public void onTimeout() {}
 
     public void cancel() {
+        Flag = false;
         recognizer.cancel();
         recognizer.shutdown();
     }
@@ -179,16 +182,17 @@ public class pocketsphinx implements RecognitionListener {
         my.Local_Alignment();
         int c = my.info();
         if(c == 0){
-            myText.setText(myText.getText() + "\nOCR");
+            myText.setText("OCR");
         }
         else{
             if(c == 1){
-                myText.setText(myText.getText() + "\nImageCaptioning");
+                myText.setText("ImageCaptioning");
             }
             else{
-                myText.setText(myText.getText() + "\nVQA");
+                myText.setText("VQA");
             }
         }
+        isalive = false;
         Intent intent = new Intent(myContext.getApplicationContext(), CameraActivity.class);
         myContext.startActivity(intent);
 

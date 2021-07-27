@@ -9,8 +9,6 @@ import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.example.A_eye_demo.Camera.Camera_Fragment;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,7 +20,6 @@ public class PermissionSupport {
     private String[] permissions = {
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.INTERNET,
             Manifest.permission.CAMERA
     };
 
