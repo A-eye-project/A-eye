@@ -4,7 +4,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.os.Bundle;
+import android.os.Handler;
 import android.speech.tts.TextToSpeech;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -28,8 +30,20 @@ public class Image_view extends AppCompatActivity {
         textViewv = (TextView)findViewById(R.id.result_text);
         image_view.setImageBitmap(Data_storage.img);
         Data_storage.Flag=false;
-        //tts.speak(Data_storage.ttxString); 말하기
-        //textViewv.setText(Data_storage.ttxString); 보여주기
+        textViewv.setText(Data_storage.ttxString); //보여주기
+        tts = TTSAdapter.getInstance(this);
+    }
+    @Override
+    public void onStart(){
+        super.onStart();
+        /*Handler n = new Handler();
+        n.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                tts.speak(Data_storage.ttxString);// 말하기
+            }
+        },2000); //*/
+        tts.speak(Data_storage.ttxString);// 말하기
     }
 
 

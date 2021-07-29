@@ -5,15 +5,9 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.fragment.app.DialogFragment;
-import androidx.fragment.app.Fragment;
 
 import android.Manifest;
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -23,15 +17,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.A_eye_demo.support.Data_storage;
 import com.example.A_eye_demo.support.ImageCaptioning;
 import com.example.A_eye_demo.support.OCR;
-import com.example.A_eye_demo.support.PermissionSupport;
 import com.example.A_eye_demo.support.TTSAdapter;
 import com.example.A_eye_demo.support.VQA;
 
@@ -58,13 +49,11 @@ import static android.widget.Toast.makeText;
 public class MainActivity extends AppCompatActivity {
     // 안드로이드 기능 변수
     private pocketsphinx pocketTEST;
-    //Button button;
-    TextView tv;
-    int count_time;
-    private PermissionSupport permission;
-    private int count2;
     ProgressDialog progressDialog;
-    private Handler mHandler;
+    // 시간조정
+    TextView tv;
+    private  Boolean Upload_Status;
+
     ImageCaptioning imgCaptioning= new ImageCaptioning();
     OCR ocr = new OCR();
     VQA vqa = new VQA();
@@ -84,36 +73,10 @@ public class MainActivity extends AppCompatActivity {
             tts.speak("어플을 이용하기 위한 권한을 모두 허용해 주세요.");
             permissionCheck();
         }
+        Upload_Status = false;
 
     }
-    @Override
-    public void onResume(){
-        super.onResume();
-        Handler n = new Handler();
-        n.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if(Data_storage.Flag == true){
 
-                    //if(Data_storage.ttxString != ""){
-                        // 서버에서 받은 문자열은 Data_Storage에 저장돼 있음.
-                        Intent intent = new Intent(getApplicationContext(), Image_view.class);
-                        startActivity(intent);
-                        tv.setText("");
-                    //}
-                    //else{
-                        //.i("E","ServerError");
-                        // onResume();
-                    //}
-                }
-                else{
-                    if(permissionCheck() == true){pocketTEST.Flag = true;}
-                    if(pocketTEST.Flag == true) tts.speak("'adam'이라고 말해주세요");// 말하고
-                    pocket_set();// 2초뒤 부터 adam 실행.
-                }
-            }
-        },2000); //
-    }
     public void pocket_set(){
         Handler n = new Handler();
         n.postDelayed(new Runnable() {
@@ -133,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
     public void onDestroy() {
         super.onDestroy();
         tts.ttsShutdown();
-        pocketTEST.cancel();
+        if(pocketTEST.isalive == true) pocketTEST.cancel();
     }
     public boolean permissionCheck(){
         //권한이 허용되어 있는지 확인한다.
@@ -186,41 +149,49 @@ public class MainActivity extends AppCompatActivity {
     private void makeToast(String msg) {
         makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
     }
-
+    @Override
+    public void onResume(){
+        super.onResume();
+        Handler n = new Handler();
+        n.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if(Data_storage.Flag == true){
+                    if(Upload_Status == false) ImageUploadToServer();
+                    if(Data_storage.ttxString != null){
+                        // 서버에서 받은 문자열은 Data_Storage에 저장돼 있음.
+                        Intent intent = new Intent(getApplicationContext(), Image_view.class);
+                        startActivity(intent);
+                        Upload_Status = false;
+                        tv.setText("");
+                    }
+                    else{
+                        Log.i("E","ServerError");
+                        onResume();
+                    }
+                }
+                else{
+                    if(permissionCheck() == true){pocketTEST.Flag = true;}
+                    if(pocketTEST.Flag == true) tts.speak("'adam'이라고 말해주세요");// 말하고
+                    pocket_set();// 2초뒤 부터 adam 실행.
+                }
+            }
+        },1000); //
+    }
     public void ImageUploadToServer(){
-
+        Upload_Status = true;
         class AsyncTaskUploadClass extends AsyncTask<Void,Void,String> {
 
             @Override
-            protected void onPreExecute() {
+            protected String doInBackground(Void... params) { // BackGround에서 동작하는 부분.
 
-                super.onPreExecute();
-
-                // Showing progress dialog at image upload time.
-                progressDialog = ProgressDialog.show(MainActivity.this, "Image is Uploading", "Please Wait", false, false);
-            }
-
-            @Override
-            protected void onPostExecute(String string1) {
-
-                super.onPostExecute(string1);
-
-                progressDialog.dismiss();
-
-                Toast.makeText(MainActivity.this,string1,Toast.LENGTH_LONG).show();
-
-
-            }
-
-            @Override
-            protected String doInBackground(Void... params) {
-
-                String res = "";
+                String res = null;
 
                 if (Data_storage.choice == 0) {
                     String img = BitmapToString(Data_storage.img);
                     res = ocr.getOcrRes(img);
                 }
+
                 else if (Data_storage.choice == 1) {
                     res = imgCaptioning.getCaption(Data_storage.img);
                 }
@@ -231,8 +202,28 @@ public class MainActivity extends AppCompatActivity {
                 if(res != ""){
                     Data_storage.ttxString = res;
                 }
+                Log.i("target",res);
                 return res;
             }
+            @Override
+            protected void onPreExecute() { // BackGround 작업이 시작되기 전에 맨처음에 작동하는 부분.
+
+                super.onPreExecute();
+
+                // Showing progress dialog at image upload time.
+                progressDialog = ProgressDialog.show(MainActivity.this, "Image is Uploading", "Please Wait", false, false);
+            }
+
+            @Override
+            protected void onPostExecute(String string1) {// 맨 마지막에 한번만 실행되는 부분.
+
+                super.onPostExecute(string1);
+
+                progressDialog.dismiss();
+
+                Toast.makeText(MainActivity.this,string1,Toast.LENGTH_LONG).show();
+            }
+
         }
         AsyncTaskUploadClass AsyncTaskUploadClassOBJ = new AsyncTaskUploadClass();
 
@@ -242,7 +233,7 @@ public class MainActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.O)
     public static String BitmapToString(Bitmap bitmap) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 70, baos);
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
         byte[] bytes = baos.toByteArray();
         String temp = Base64.getEncoder().encodeToString(bytes);
         try {
