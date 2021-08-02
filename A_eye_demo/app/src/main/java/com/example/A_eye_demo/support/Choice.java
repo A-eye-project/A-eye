@@ -1,6 +1,5 @@
 package com.example.A_eye_demo.support;
 
-
 import android.app.Application;
 import android.util.Log;
 
@@ -8,20 +7,29 @@ import java.util.Arrays;
 
 public class Choice extends Application {
     public static String my_str;
-    public static String sample_image[] = {" 설명해", " 묘사해", " 말해","알려","알려"};
+    public static String sample_image[] = {" 설명해", " 묘사해", " 말해", "알려"};
     public static int Score_image;
-    public static boolean OCR_Flag;
+    //public static boolean OCR_Flag;
+    public static int Choice_func; // 1 : OCR, 2 : Image, 3 : VQA
+
+    // Define macro number
+    public static final int OCR = 1;
+    public static final int Image = 2;
+    public static final int VQA = 3;
+
     public static int num;
+
     @Override
-    public void onCreate(){
+    public void onCreate() {
         super.onCreate();
         my_str = "";
         num = -1;
         Score_image = 0;
-        OCR_Flag = false;
+        Choice_func = 0;
+        //OCR_Flag = false;
     }
 
-    public void Set_str(String str){
+    public void Set_str(String str) {
         str = str.replace("?","");
         str = str.replace("!","");
         str = str.replace(".","");
@@ -29,39 +37,44 @@ public class Choice extends Application {
         my_str = str;
         Log.i("test",my_str);
     }
-    public void Local_Alignment(){
+
+    public void Local_Alignment() {
         Score_image = 0;
-        OCR_Flag = false;
+        Choice_func = 0;
+        //OCR_Flag = false;
         String x = my_str;
-        if(x.contains("읽어")){// OCR
-            OCR_Flag = true;
-        }
-        else{ // Get Image Captioning Score
+
+        if(x.contains("읽어")) {// OCR
+            Choice_func = 1;
+            //OCR_Flag = true;
+        } else { // Get Image Captioning Score
             int m = my_str.length();
             int match = 20;
             int miss_match = -2;
             int gap = -2;
-            for(int s = 0 ; s < sample_image.length; ++s){
+
+            for (int s = 0 ; s < sample_image.length; ++s) {
                 String y = sample_image[s];
                 int i,j;
                 int n = y.length();
+                int dp[][] = new int[n + m + 1][n + m + 1];
                 //Log.i("len",Integer.toString(m) + ", " + Integer.toString(n));
                 Log.i("str",x + ", " + y);
-                int dp[][] = new int[n + m + 1][n + m + 1];
+
                 for (int[] x1 : dp)
                     Arrays.fill(x1,0);
 
-                for(i=0;i<=(n+m);++i){
+                for (i = 0; i <= (n+m); ++i) {
                     dp[i][0] = i*gap;
                     dp[0][i] = i*gap;
                 }
-                for(i=1;i<m;++i) {
+
+                for (i = 1; i < m; ++i) {
                     for (j = 1; j <n; ++j) {
-                        if(x.charAt(i) == y.charAt(j)) {
+                        if (x.charAt(i) == y.charAt(j)) {
                             dp[i][j] += Math.max(
                                     dp[i - 1][j - 1] + match, Math.max(dp[i][j - 1] + gap,dp[i - 1][j] + gap));
-                        }
-                        else {
+                        } else {
                             dp[i][j] += Math.max(
                                     dp[i - 1][j - 1] + miss_match, Math.max(dp[i][j - 1] + gap,dp[i - 1][j] + gap));
                         }
@@ -70,20 +83,37 @@ public class Choice extends Application {
                 //Log.i("score",Integer.toString(dp[m-1][n-1]) + ", " + Integer.toString(dp[m-1][n-1]));
                 Score_image = Math.max(Score_image, dp[m-1][n-1]);
             }
+
+            if (Score_image > 30) {
+                Choice_func = 2;
+            } else {
+                Choice_func = 3;
+            }
         }
     }
-    public int info(){
-        if(OCR_Flag == true){ // OCR
-            num = 0;
+
+    public int info() { // Local Alignment 에서 판단되는 기능을 선택.
+        switch (Choice_func) {
+            case OCR:
+                num = 0;
+                break;
+
+            case Image:
+                num = 1;
+                break;
+
+            case VQA:
+                num = 2;
+                Data_storage.question = my_str;
+                break;
+
+            default: // 이쪽으로 온다면 에러
+                Log.i("func_Choice","invalid choice");
+                break;
         }
-        else if(Score_image > 30){ // Image captioning
-            num = 1;
-        }
-        else{ // VQA
-            num = 2;
-            Data_storage.question = my_str;
-        }
+
         Data_storage.choice = num;
+
         return num;
     }
 }

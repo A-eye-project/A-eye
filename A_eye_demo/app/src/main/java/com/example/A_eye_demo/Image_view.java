@@ -1,22 +1,13 @@
 package com.example.A_eye_demo;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
 import android.os.Bundle;
-import android.os.Handler;
-import android.speech.tts.TextToSpeech;
-import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import static android.speech.tts.TextToSpeech.ERROR;
+
 import com.example.A_eye_demo.support.Data_storage;
 import com.example.A_eye_demo.support.TTSAdapter;
-
-import java.io.File;
-import java.util.Locale;
 
 public class Image_view extends AppCompatActivity {
     ImageView image_view;
@@ -33,6 +24,7 @@ public class Image_view extends AppCompatActivity {
         textViewv.setText(Data_storage.ttxString); //보여주기
         tts = TTSAdapter.getInstance(this);
     }
+
     @Override
     public void onStart(){
         super.onStart();
