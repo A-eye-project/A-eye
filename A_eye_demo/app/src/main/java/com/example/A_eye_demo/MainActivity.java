@@ -14,13 +14,12 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.example.A_eye_demo.support.Data_storage;
-import com.example.A_eye_demo.support.TTSAdapter;
 
 import static android.widget.Toast.makeText;
 
 /*
 전체적인 과정
-1. "adam" 호출
+1. 키워드 호출 호출
 2. 3초간 음성 명령
 3. Texture View 실행
 4. Camera  Open후 3초뒤 촬영  (pictureHandler로 시간 조절), 내부 저장소에 .jpg형태로 사진 저장
@@ -32,11 +31,11 @@ import static android.widget.Toast.makeText;
 10. image_view에서 이미지 보여주기 및
 8. main 으로 돌아오면 1번 부터 다시 시작.
  */
+
 public class MainActivity extends AppCompatActivity {
     // 시간조정
     TextView tv;
     TotalClass total = new TotalClass();
-    private TTSAdapter tts = null; //TTS 사용하고자 한다면 1) 클래스 객체 선언
 
     @Override
     public void onCreate(Bundle state) {
@@ -48,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
         total.setup(this, tv);
 
         if (permissionCheck() == false) {
-            tts.speak("어플을 이용하기 위한 권한을 모두 허용해 주세요.");
+            total.tts.speak("어플을 이용하기 위한 권한을 모두 허용해 주세요.");
             permissionCheck();
         }
     }
@@ -56,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        tts.ttsShutdown();
+        total.tts.ttsShutdown();
         if(total.get_pocket_isalive() == true) total.cancel();
     }
 
@@ -82,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
         //tmp에 내용물이 있다면, 즉 권한 승인받지 못한 권한이 있다면
         if(TextUtils.isEmpty(tmp) == false) {
             //권한 요청하기
-            tts.speak("어플을 이용하기 위해 화면에 뜨는 모든 권한을 허용해 주세요.");
+            total.tts.speak("어플을 이용하기 위해 화면에 뜨는 모든 권한을 허용해 주세요.");
             ActivityCompat.requestPermissions(this, tmp.trim().split(" "), 1);
             return false;
         } else {
@@ -120,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
             total.resume(this);
         } else {
             if (permissionCheck() == true) { total.set_pocket_flag(true); }
-            if (total.get_pocket_flag() == true) tts.speak("'adam'이라고 말해주세요");// 말하고
+            if (total.get_pocket_flag() == true) total.tts.speak("'adam'이라고 말해주세요");// 말하고
             total.pocket_set();
         }
     }

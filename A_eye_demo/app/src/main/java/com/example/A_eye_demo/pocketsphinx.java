@@ -26,7 +26,7 @@ import static android.widget.Toast.makeText;
 public class pocketsphinx implements RecognitionListener {
     // 활성 키워드
     private static final String KWS_SEARCH = "wakeup";
-    private static final String KEYPHRASE = "adam";
+    private static final String KEYPHRASE = "jarvis";
 
     //변수
     private Handler mHandler;

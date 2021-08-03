@@ -38,7 +38,7 @@ public class TotalClass {
     ImageCaptioning imgCaptioning = new ImageCaptioning();
     OCR ocr = new OCR();
     VQA vqa = new VQA();
-    private TTSAdapter tts = null;
+    TTSAdapter tts = null;
 
     public void setup(Context mainContext, TextView tv) {
         myContext = mainContext;
@@ -82,6 +82,7 @@ public class TotalClass {
         }, 1000);
     }
 
+    public String get_pocket_keyword() { return pocketTEST.get_keyword(); }
     public boolean get_pocket_isalive() { return pocketTEST.isalive; }
     public boolean get_pocket_flag() { return pocketTEST.Flag; }
     public void set_pocket_flag(Boolean f) { pocketTEST.Flag = f; }
@@ -89,7 +90,7 @@ public class TotalClass {
 
     public void ImageUploadToServer(Context mainContext) {
         Data_storage.Upload_Status = true;
-        class AsyncTaskUploadClass extends AsyncTask<Void,Void,String> {
+        class AsyncTaskUploadClass extends AsyncTask<Void, Void, String> {
 
             @Override
             protected String doInBackground(Void... params) { // BackGround에서 동작하는 부분.
@@ -109,7 +110,7 @@ public class TotalClass {
 
                     case 2: // VQA
                         uploadImg = BitmapToString(Data_storage.img);
-                        res = vqa.getAns(uploadImg,Data_storage.question);
+                        res = vqa.getAns(uploadImg, Data_storage.question);
                         break;
 
                     default: // 이쪽으로 온다면 에러.
