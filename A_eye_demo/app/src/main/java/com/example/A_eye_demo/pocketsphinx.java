@@ -26,7 +26,8 @@ import static android.widget.Toast.makeText;
 public class pocketsphinx implements RecognitionListener {
     // 활성 키워드
     private static final String KWS_SEARCH = "wakeup";
-    private static final String KEYPHRASE = "adam";
+    private static final String KEYPHRASE = "jarvis";
+
     //변수
     private Handler mHandler;
     public boolean isalive = false; // setup 여부
@@ -139,9 +140,11 @@ public class pocketsphinx implements RecognitionListener {
         recognizer.cancel();
         recognizer.shutdown();
     }
-    private void get_record_string(){
+
+    private void get_record_string() {
         Record myRecord = new Record();
         myText.setText("Recording.. ");
+
         new Thread(new Runnable() { //새 Thread에서 녹음 시작
             public void run() {
                 try {
@@ -152,23 +155,23 @@ public class pocketsphinx implements RecognitionListener {
                 }
             }
         }).start();
+
         mHandler = new Handler();
-        mHandler.postDelayed(new Runnable(){ // 녹음 하는 시간 지연
+        mHandler.postDelayed(new Runnable() { // 녹음 하는 시간 지연
             @Override
-            public void run(){
+            public void run() {
                 myRecord.Stop_record(); // 녹음 종료
                 myText.setText("Reconizing.. ");
                 int status = myRecord.net_com(); // 녹음 파일 -> String으로 바꾸는 API 통신 , return값은 통신 상태
-                if(status == 1){
+
+                if (status == 1) {
                     Result = myRecord.get_re();
                     myText.setText(Result);
                     get_num();
-                }
-                else{
-                    if(status == -2){
+                } else {
+                    if (status == -2) {
                         myText.setText("No response from server for 20 secs");
-                    }
-                    else{
+                    } else {
                         myText.setText("Interrupted");
                     }
                 }
@@ -176,30 +179,26 @@ public class pocketsphinx implements RecognitionListener {
         },3000); // 녹음 시간 -> 현재 3초
     }
 
-    private void get_num(){
+    private void get_num() {
         Choice my = new Choice();
         my.Set_str(" "+ Result.replaceAll(" ",""));
         my.Local_Alignment();
         int c = my.info();
-        if(c == 0){
+
+        if (c == 0) {
             myText.setText("OCR");
-        }
-        else{
-            if(c == 1){
+        } else {
+            if (c == 1) {
                 myText.setText("ImageCaptioning");
-            }
-            else{
+            } else {
                 myText.setText("VQA");
             }
         }
+
         isalive = false;
         Intent intent = new Intent(myContext.getApplicationContext(), CameraActivity.class);
         myContext.startActivity(intent);
-
     }
 
-
-    public void start_command(){
-        recognizer.startListening(KWS_SEARCH);
-    }
+    public String get_keyword() { return KEYPHRASE; } // return Voice keyword
 }

@@ -1,12 +1,8 @@
 package com.example.A_eye_demo.support;
 
-import android.graphics.Bitmap;
-
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -18,6 +14,7 @@ import javax.net.ssl.HttpsURLConnection;
 public class VQA {
 
     private String requestURL = "URL of Server";
+    private JSONObject jsonObject = new JSONObject(); // 이게 될까?
 
     public String getAns(String img, String Question) {
 
@@ -32,7 +29,6 @@ public class VQA {
             String json = "";
 
             //make json
-            JSONObject jsonObject = new JSONObject();
             jsonObject.accumulate("Image", img);
             jsonObject.accumulate("Question", Question);
 

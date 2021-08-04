@@ -11,17 +11,20 @@ public class Data_storage extends Application {
     public static String question;
     public static String ttxString;
     public static int choice;
+    public static Boolean Upload_Status;
 
     @Override
-    public void onCreate(){
+    public void onCreate() {
         Flag = false;
         img = null;
         img_path = "";
         question = "";
         ttxString = "";
         choice = 0;
+        Upload_Status = false;
         super.onCreate();
     }
+
     public Bitmap getImg(){
         return img;
     }
