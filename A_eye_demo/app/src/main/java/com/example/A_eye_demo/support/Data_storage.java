@@ -3,6 +3,7 @@ package com.example.A_eye_demo.support;
 import android.app.Application;
 
 import android.graphics.Bitmap;
+import android.widget.ImageView;
 
 public class Data_storage extends Application {
     public static Bitmap img;
@@ -12,6 +13,7 @@ public class Data_storage extends Application {
     public static String ttxString;
     public static int choice;
     public static Boolean Upload_Status;
+    public static ImageView imageView;
 
     @Override
     public void onCreate() {
@@ -22,6 +24,7 @@ public class Data_storage extends Application {
         ttxString = "";
         choice = 0;
         Upload_Status = false;
+        imageView = null;
         super.onCreate();
     }
 

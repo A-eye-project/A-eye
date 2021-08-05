@@ -1,19 +1,12 @@
 package com.example.A_eye_demo;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
-import android.graphics.Point;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -24,7 +17,6 @@ import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
-import android.media.ExifInterface;
 import android.media.Image;
 import android.media.ImageReader;
 import android.os.Build;
@@ -39,17 +31,18 @@ import android.view.TextureView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 import com.example.A_eye_demo.Camera.AutoFitTextureView;
 import com.example.A_eye_demo.support.Data_storage;
+
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 
 public class CameraActivity extends AppCompatActivity {
@@ -131,11 +124,11 @@ public class CameraActivity extends AppCompatActivity {
     //카메라 화면이 업데이트 될 때 실행되는 메소드
     private void updatePreview() {
         Log.i("target","Update");
-        if(cameraDevice == null) //카메라를 연결하고 업데이트 메소드를 호출했는데, 만약 카메라 장치가 null값이면 에러 출력
+        if (cameraDevice == null) //카메라를 연결하고 업데이트 메소드를 호출했는데, 만약 카메라 장치가 null값이면 에러 출력
             Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
         //다시 빌더 셋팅
         captureRequestBuilder.set(CaptureRequest.CONTROL_MODE,CaptureRequest.CONTROL_MODE_AUTO);
-        try{
+        try {
             cameraCaptureSessions.setRepeatingRequest(captureRequestBuilder.build(),null,mBackgroundHandler);
         } catch (CameraAccessException e) {
             e.printStackTrace();
@@ -143,7 +136,7 @@ public class CameraActivity extends AppCompatActivity {
     }
 
     private void createCameraPreview() {
-        try{
+        try {
             SurfaceTexture texture = textureView.getSurfaceTexture();
             //자바의 검증 기능 assert문. 참, 거짓을 검증한다.
             assert  texture != null;
@@ -158,7 +151,7 @@ public class CameraActivity extends AppCompatActivity {
             cameraDevice.createCaptureSession(Arrays.asList(surface), new CameraCaptureSession.StateCallback() {
                 @Override
                 public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
-                    if(cameraDevice == null)
+                    if (cameraDevice == null)
                         return;
                     cameraCaptureSessions = cameraCaptureSession;
                     updatePreview();//화면 업데이트 메소드 호출
@@ -202,7 +195,7 @@ public class CameraActivity extends AppCompatActivity {
     private void openCamera() {
         //카메라 관리하는 매니저 객체
         CameraManager manager = (CameraManager)getSystemService(Context.CAMERA_SERVICE);
-        try{
+        try {
             cameraId = manager.getCameraIdList()[0];  //모든 카메라 종류 중에서 가장 기본 카메라인 0번째 카메라 설정
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId); //0번째 카메라 특성 변수
             StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
@@ -232,9 +225,7 @@ public class CameraActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture, int i, int i1) {
-
-        }
+        public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture, int i, int i1) {}
 
         @Override
         public boolean onSurfaceTextureDestroyed(SurfaceTexture surfaceTexture) {
@@ -242,9 +233,7 @@ public class CameraActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {
-
-        }
+        public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {}
     };
 
     @Override

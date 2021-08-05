@@ -29,7 +29,7 @@ import java.util.Base64;
  */
 
 public class TotalClass {
-    private TextView myTv;
+    //private TextView myTv;
     private Context myContext;
 
     private pocketsphinx pocketTEST;
@@ -42,7 +42,7 @@ public class TotalClass {
 
     public void setup(Context mainContext, TextView tv) {
         myContext = mainContext;
-        myTv = tv;
+        //myTv = tv;
 
         tts = TTSAdapter.getInstance(myContext);
         pocketTEST = new pocketsphinx(myContext, tv);
@@ -55,7 +55,8 @@ public class TotalClass {
             public void run() {
                 if ((pocketTEST.Flag == true) && (pocketTEST.isalive == false)) {
                     pocketTEST.onSetup();
-                    myTv.setText("Tell '" + pocketTEST.get_keyword() + "'");
+                    pocketTEST.makeToast("Tell '" + pocketTEST.get_keyword() + "'");
+                    //myTv.setText("Tell '" + pocketTEST.get_keyword() + "'");
                 } else {
                     Log.i("Target", "What??");
                 }
@@ -73,7 +74,7 @@ public class TotalClass {
                     Intent intent = new Intent(mainContext.getApplicationContext(), Image_view.class);
                     mainContext.startActivity(intent);
                     Data_storage.Upload_Status = false;
-                    myTv.setText("");
+                    //myTv.setText("");
                 } else {
                     Log.i("E", "ServerError");
                     resume(mainContext);

@@ -28,8 +28,8 @@ public class Record_to_String {
         return sb.toString();
     }
     public static String sendDataAndGetResult (byte [] speechData ,int lenSpeech) {
-        String openApiURL = "http://aiopen.etri.re.kr:8000/WiseASR/Recognition";
-        String accessKey = "63a5bd74-e86d-4691-9c8a-249d43801052";
+        String openApiURL = "";
+        String accessKey = "";
         String audioContents;
 
 

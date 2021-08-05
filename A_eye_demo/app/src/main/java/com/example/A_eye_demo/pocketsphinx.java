@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import com.example.A_eye_demo.Record.Record;
 import com.example.A_eye_demo.support.Choice;
+import com.example.A_eye_demo.support.Data_storage;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,10 +39,10 @@ public class pocketsphinx implements RecognitionListener {
     private SpeechRecognizer recognizer;
 
     private Context myContext;
-    private TextView myText;
+    //private TextView myText;
     pocketsphinx(Context context, TextView tv) {
         myContext = context;
-        myText = tv;
+        //myText = tv;
     }
 
     public void onSetup() {
@@ -79,7 +80,7 @@ public class pocketsphinx implements RecognitionListener {
 
     }
 
-    private void makeToast(String msg) {
+    public void makeToast(String msg) {
         makeText(myContext.getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
     }
 
@@ -143,7 +144,9 @@ public class pocketsphinx implements RecognitionListener {
 
     private void get_record_string() {
         Record myRecord = new Record();
-        myText.setText("Recording.. ");
+        makeToast("Recording.. ");
+        Data_storage.imageView.setImageResource(R.drawable.kakaotalk_20210805_134338172_04);
+        //myText.setText("Recording.. ");
 
         new Thread(new Runnable() { //새 Thread에서 녹음 시작
             public void run() {
@@ -161,20 +164,42 @@ public class pocketsphinx implements RecognitionListener {
             @Override
             public void run() {
                 myRecord.Stop_record(); // 녹음 종료
-                myText.setText("Reconizing.. ");
+                makeToast("Reconizing");
+                Data_storage.imageView.setImageResource(R.drawable.kakaotalk_20210805_134338172_06);
+                //myText.setText("Reconizing.. ");
                 int status = myRecord.net_com(); // 녹음 파일 -> String으로 바꾸는 API 통신 , return값은 통신 상태
 
+                switch (status) {
+                    case 1:
+                        Result = myRecord.get_re();
+                        get_num();
+                        break;
+
+                    case -2:
+                        makeToast("No response from server for 20 secs");
+                        break;
+
+                    default:
+                        makeToast("Interrupted");
+                        break;
+                }
+
+                /*
                 if (status == 1) {
                     Result = myRecord.get_re();
-                    myText.setText(Result);
+                    //myText.setText(Result);
                     get_num();
                 } else {
                     if (status == -2) {
-                        myText.setText("No response from server for 20 secs");
+                        makeToast("No response from server for 20 secs");
+                        //myText.setText("No response from server for 20 secs");
                     } else {
-                        myText.setText("Interrupted");
+                        makeToast("Interrupted");
+                        //myText.setText("Interrupted");
                     }
                 }
+
+                 */
             }
         },3000); // 녹음 시간 -> 현재 3초
     }
@@ -185,7 +210,24 @@ public class pocketsphinx implements RecognitionListener {
         my.Local_Alignment();
         int c = my.info();
 
-        if (c == 0) {
+        switch (c) {
+            case 0: // OCR
+                makeToast("OCR");
+                break;
+
+            case 1: // Image Captioning
+                makeToast("ImageCaptioning");
+                break;
+
+            case 2: // VQA
+                makeToast("VQA");
+                break;
+
+            default:
+                break;
+        }
+
+        /*if (c == 0) {
             myText.setText("OCR");
         } else {
             if (c == 1) {
@@ -193,9 +235,11 @@ public class pocketsphinx implements RecognitionListener {
             } else {
                 myText.setText("VQA");
             }
-        }
+        }*/
 
         isalive = false;
+
+        // 이곳에서 카메라 액션이 발생함.
         Intent intent = new Intent(myContext.getApplicationContext(), CameraActivity.class);
         myContext.startActivity(intent);
     }

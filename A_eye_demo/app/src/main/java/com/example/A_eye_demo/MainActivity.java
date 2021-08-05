@@ -5,6 +5,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,7 +42,8 @@ public class MainActivity extends AppCompatActivity {
     public void onCreate(Bundle state) {
         super.onCreate(state);
         setContentView(R.layout.activity_main);
-        tv = (TextView)findViewById(R.id.caption_id);
+        //tv = (TextView)findViewById(R.id.caption_id);
+        Data_storage.imageView = (ImageView)findViewById(R.id.imageView6);
         Data_storage.Flag = Boolean.FALSE;
 
         total.setup(this, tv);
