@@ -36,7 +36,7 @@ public class Image_Captioning {
             httpURLConnectionObject.setDoInput(true);
             httpURLConnectionObject.setDoOutput(true);
             outPutStream = httpURLConnectionObject.getOutputStream();
-
+            Bitmap.createScaledBitmap(Global_variable.img, 480, 620, true);
             Global_variable.img.compress(Bitmap.CompressFormat.JPEG, 100, outPutStream);
 
             outPutStream.close();

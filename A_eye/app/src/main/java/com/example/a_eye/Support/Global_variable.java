@@ -32,7 +32,6 @@ public class Global_variable extends Application {
         super.onCreate();
     }
 
-
     public static void set_Json() throws JSONException {
         jsonObject = new JSONObject();
         jsonObject.accumulate("Image", imgString);
