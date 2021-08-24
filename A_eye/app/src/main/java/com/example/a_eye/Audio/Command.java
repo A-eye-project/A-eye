@@ -5,8 +5,8 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Vibrator;
 import android.util.Log;
-import android.widget.Toast;
 import com.example.a_eye.Support.Select_Function;
+import com.example.a_eye.Support.Set_Dialog;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,8 +18,6 @@ import edu.cmu.pocketsphinx.RecognitionListener;
 import edu.cmu.pocketsphinx.SpeechRecognizer;
 import edu.cmu.pocketsphinx.SpeechRecognizerSetup;
 
-import static android.widget.Toast.makeText;
-
 public class Command implements RecognitionListener {
     // 활성 키워드
     private static final String KWS_SEARCH = "wakeup";
@@ -28,7 +26,7 @@ public class Command implements RecognitionListener {
     public static boolean startCapture;
     public static boolean isalive;
     private Handler mHandler = new Handler();;
-    String Result;
+    private String Result;
     private Vibrator vibrator;
 
     // 디코더
@@ -119,7 +117,7 @@ public class Command implements RecognitionListener {
                 .setAcousticModel(new File(assetsDir, "en-us-ptm"))
                 .setDictionary(new File(assetsDir, "cmudict-en-us.dict"))
                 .setRawLogDir(assetsDir)
-                .setKeywordThreshold(1e-20f)
+                .setKeywordThreshold(1e-10f)
                 .getRecognizer();
 
         recognizer.addListener(this);

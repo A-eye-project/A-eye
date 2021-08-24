@@ -1,6 +1,5 @@
 package com.example.a_eye;
 
-
 import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -28,9 +27,11 @@ public class ForegroundService extends Service {
     PendingIntent pendingIntent;
     private Thread mainThread;
     Command cm = new Command(this);
+
+    public static final boolean isStarted = false;
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
         serviceIntent = intent;
         mainThread = new Thread(new Runnable() {
             @Override
@@ -46,13 +47,12 @@ public class ForegroundService extends Service {
                 }
             }
         });
+
         mainThread.start();
         return START_NOT_STICKY;
     }
 
     //서비스가 종료될 때 할 작업
-
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -81,6 +81,7 @@ public class ForegroundService extends Service {
             mainThread = null;
         }
     }
+
     public void showToast(final Application application, final String msg) {
         Handler h = new Handler(application.getMainLooper());
         h.post(new Runnable() {
@@ -90,11 +91,12 @@ public class ForegroundService extends Service {
             }
         });
     }
+
     private void sendNotification(String messageBody) {
         Intent intent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent, PendingIntent.FLAG_ONE_SHOT);
 
-        String channelId = "fcm_default_channel";//getString(R.string.default_notification_channel_id);
+        String channelId = "fcm_default_channel"; //getString(R.string.default_notification_channel_id);
         Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder =
                 new NotificationCompat.Builder(this, channelId)
@@ -116,6 +118,7 @@ public class ForegroundService extends Service {
 
         notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
     }
+
     public void call_main(){
         /*
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
@@ -143,7 +146,5 @@ public class ForegroundService extends Service {
         }*/
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
-
     }
-
 }

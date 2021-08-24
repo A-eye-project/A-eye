@@ -2,7 +2,6 @@ package com.example.a_eye.Support;
 
 import android.app.Application;
 import android.util.Log;
-
 import java.util.Arrays;
 
 public class Select_Function  extends Application {
@@ -20,7 +19,7 @@ public class Select_Function  extends Application {
         OCR_Flag = false;
     }
 
-    public void Set_str(String str){
+    public void Set_str(String str) {
         str = str.replace("?","");
         str = str.replace("!","");
         str = str.replace(".","");
@@ -28,19 +27,19 @@ public class Select_Function  extends Application {
         my_str = str;
         Log.i("test",my_str);
     }
-    public void Local_Alignment(){
+
+    public void Local_Alignment() {
         Score_image = 0;
         OCR_Flag = false;
         String x = my_str;
-        if(x.contains("읽어")){// OCR
+        if (x.contains("읽어")) {// OCR
             OCR_Flag = true;
-        }
-        else{ // Get Image Captioning Score
+        } else { // Get Image Captioning Score
             int m = my_str.length();
             int match = 20;
             int miss_match = -2;
             int gap = -2;
-            for(int s = 0 ; s < sample_image.length; ++s){
+            for (int s = 0 ; s < sample_image.length; ++s) {
                 String y = sample_image[s];
                 int i,j;
                 int n = y.length();
@@ -50,17 +49,17 @@ public class Select_Function  extends Application {
                 for (int[] x1 : dp)
                     Arrays.fill(x1,0);
 
-                for(i=0;i<=(n+m);++i){
+                for (i = 0; i <= (n + m); ++i) {
                     dp[i][0] = i*gap;
                     dp[0][i] = i*gap;
                 }
-                for(i=1;i<m;++i) {
+
+                for (i = 1; i < m; ++i) {
                     for (j = 1; j <n; ++j) {
-                        if(x.charAt(i) == y.charAt(j)) {
+                        if (x.charAt(i) == y.charAt(j)) {
                             dp[i][j] += Math.max(
                                     dp[i - 1][j - 1] + match, Math.max(dp[i][j - 1] + gap,dp[i - 1][j] + gap));
-                        }
-                        else {
+                        } else {
                             dp[i][j] += Math.max(
                                     dp[i - 1][j - 1] + miss_match, Math.max(dp[i][j - 1] + gap,dp[i - 1][j] + gap));
                         }
@@ -69,16 +68,16 @@ public class Select_Function  extends Application {
                 Score_image = Math.max(Score_image, dp[m-1][n-1]);
             }
         }
-        if(OCR_Flag == true){ // OCR
+
+        if (OCR_Flag == true) { // OCR
             num = 0;
-        }
-        else if(Score_image > 30){ // Image captioning
+        } else if(Score_image > 30) { // Image captioning
             num = 1;
-        }
-        else{ // VQA
+        } else { // VQA
             num = 2;
             Global_variable.question = my_str;
         }
+
         Global_variable.choice = num;
     }
 }

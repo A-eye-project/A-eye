@@ -11,11 +11,13 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
+import android.graphics.drawable.ColorDrawable;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -41,6 +43,7 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -50,15 +53,16 @@ import androidx.fragment.app.Fragment;
 
 import com.example.a_eye.Audio.Command;
 import com.example.a_eye.Audio.TTSAdapter;
+import com.example.a_eye.MainActivity;
 import com.example.a_eye.R;
 import com.example.a_eye.Server.Image_Captioning;
 import com.example.a_eye.Server.OCR;
 import com.example.a_eye.Server.VQA;
 import com.example.a_eye.Support.Global_variable;
+import com.example.a_eye.Support.Set_Dialog;
 
 import org.json.JSONException;
 
-import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -86,6 +90,7 @@ public class Camera_Fragment extends Fragment
     /**
      * Conversion from screen rotation to JPEG orientation.
      */
+    private static Context mainContext;
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
     private static final int REQUEST_CAMERA_PERMISSION = 1;
     private static final String FRAGMENT_DIALOG = "dialog";
@@ -399,6 +404,7 @@ public class Camera_Fragment extends Fragment
      * @param aspectRatio       The aspect ratio
      * @return The optimal {@code Size}, or an arbitrary one if none were big enough
      */
+
     private static Size chooseOptimalSize(Size[] choices, int textureViewWidth,
                                           int textureViewHeight, int maxWidth, int maxHeight, Size aspectRatio) {
 
@@ -432,7 +438,8 @@ public class Camera_Fragment extends Fragment
         }
     }
 
-    public static Camera_Fragment newInstance() {
+    public static Camera_Fragment newInstance(Context main) {
+        mainContext = main;
         return new Camera_Fragment();
     }
 
@@ -442,7 +449,6 @@ public class Camera_Fragment extends Fragment
         return inflater.inflate(R.layout.camera_fragment, container, false);
 
         //LayoutInflater의 inflate() 메서드로 Layout을 inflate 한 경우에는 폴더별(Land, Port) Layout을 저절로 참조 하게 된다.
-
     }
 
     @Override
@@ -450,9 +456,7 @@ public class Camera_Fragment extends Fragment
         mTextureView = (AutoFitTextureView) view.findViewById(R.id.texture); // 화면 그자체 com.example.android.camera2basic.AutoFitTextureView
         tts = TTSAdapter.getInstance(getContext());
         command = new Command(getContext());
-
     }
-
 
     @Override
     public void onResume() {
@@ -477,32 +481,32 @@ public class Camera_Fragment extends Fragment
         super.onPause();
     }
 
-
     public boolean permissionCheck(){
         //권한이 허용되어 있는지 확인한다.
         String tmp = "";
 
         //카메라 권한 확인 > 권한 승인되지 않으면 tmp에 권한 내용 저장
-        if(ContextCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA)!= PackageManager.PERMISSION_GRANTED){
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA)!= PackageManager.PERMISSION_GRANTED) {
             tmp += Manifest.permission.CAMERA+" ";
         }
 
         //카메라 저장 권한 확인
-        if(ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED){
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED) {
             tmp += Manifest.permission.WRITE_EXTERNAL_STORAGE+" ";
         }
 
         //음성 녹음 권한 확인
-        if(ContextCompat.checkSelfPermission(getContext(), Manifest.permission.RECORD_AUDIO)!= PackageManager.PERMISSION_GRANTED){
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.RECORD_AUDIO)!= PackageManager.PERMISSION_GRANTED) {
             tmp += Manifest.permission.RECORD_AUDIO+" ";
         }
+
         //tmp에 내용물이 있다면, 즉 권한 승인받지 못한 권한이 있다면
-        if(TextUtils.isEmpty(tmp) == false) {
+        if (TextUtils.isEmpty(tmp) == false) {
             //권한 요청하기
             //tts.speak("어플을 이용하기 위해 화면에 뜨는 모든 권한을 허용해 주세요.");
             ActivityCompat.requestPermissions(getActivity(), tmp.trim().split(" "), 1);
             return false;
-        }else{
+        } else {
             //허용 되어 있으면 그냥 두기
             Log.d("상황: ", "권한 모두 허용");
             return true;
@@ -522,18 +526,18 @@ public class Camera_Fragment extends Fragment
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         //권한 허용했을 경우
-        if(requestCode == 1){
+        if (requestCode == 1){
             int length = permissions.length;
-            for(int i=0; i<length; i++){
-                if(grantResults[i] == PackageManager.PERMISSION_GRANTED){
+            for (int i = 0; i < length; i++) {
+                if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                     //동의
                     Log.d("상황: ","권한 허용 "+permissions[i]);
-                }
-                else{
+                } else {
                     getActivity().finish();
                 }
             }
         }
+
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
@@ -543,6 +547,7 @@ public class Camera_Fragment extends Fragment
      * @param width  The width of available size for camera preview
      * @param height The height of available size for camera preview
      */
+
     @SuppressWarnings("SuspiciousNameCombination")
     private void setUpCameraOutputs(int width, int height) {
         Activity activity = getActivity();
@@ -624,13 +629,13 @@ public class Camera_Fragment extends Fragment
                 // Danger, W.R.! Attempting to use too large a preview size could  exceed the camera
                 // bus' bandwidth limitation, resulting in gorgeous previews but the storage of
                 // garbage capture data.
-                /*
+
                 mPreviewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
                         rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth,
                         maxPreviewHeight, largest);
-                */
-                Size mysize = new Size(maxPreviewWidth,maxPreviewHeight);
-                mPreviewSize = mysize;
+
+                //Size mysize = new Size(maxPreviewWidth,maxPreviewHeight);
+                //mPreviewSize = mysize;
                 // We fit the aspect ratio of TextureView to the size of preview we picked.
                 int orientation = getResources().getConfiguration().orientation;
                 if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
@@ -661,6 +666,7 @@ public class Camera_Fragment extends Fragment
     /**
      * Opens the camera specified by {@link Camera_Fragment#mCameraId}.
      */
+
     //카메라 장치를 여는 것 설정하는 메소드
     private void openCamera(int width, int height) {
         if(permissionCheck() == false) return;
@@ -672,6 +678,7 @@ public class Camera_Fragment extends Fragment
         setUpCameraOutputs(width, height);
         configureTransform(width, height);
         Activity activity = getActivity();
+
         //카메라 관리하는 매니저 객체
         CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
         try {
@@ -733,6 +740,7 @@ public class Camera_Fragment extends Fragment
      *  따라서 시간이 걸리는 작업을 하는 코드는 여분의 스레드를 사용하여 메인 스레드에서 분리해야 하고, 자연스럽게 메인 스레드와 다른 스레드가 통신하는 방법이 필요하게 됩니다.
      * Stops the background thread and its {@link Handler}.
      */
+
     private void stopBackgroundThread() {
         mBackgroundThread.quitSafely(); // 카메라 중단
         try {
@@ -775,7 +783,9 @@ public class Camera_Fragment extends Fragment
                             if (null == mCameraDevice) {
                                 return;
                             }
-                            if(permission_complete == false){
+
+                            // 여기서 Command Setup
+                            if (permission_complete == false) {
                                 permission_complete = true;
                                 timer.postDelayed(new Runnable() {
                                     @Override
@@ -784,6 +794,7 @@ public class Camera_Fragment extends Fragment
                                     }
                                 },1000);
                             }
+
                             // When the session is ready, we start displaying the preview.
                             mCaptureSession = cameraCaptureSession;
                             try {
@@ -1056,12 +1067,11 @@ public class Camera_Fragment extends Fragment
 
     //안드로이드 명령어 변수
     private Command command;
+
     // tts 변수
     private TTSAdapter tts = null; //TTS 사용하고자 한다면 1) 클래스 객체 선언
 
-
-
-    private void SetupCommand(){
+    private void SetupCommand() {
         timer.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -1071,12 +1081,12 @@ public class Camera_Fragment extends Fragment
         },1000);
     }
 
-    private void catch_catpture(){//Command에서 Localignment까지 종료시 실행.
+    private void catch_catpture() { // Command에서 Localignment까지 종료시 실행.
         Timer Catch = new Timer();
         TimerTask capture = new TimerTask() {
             @Override
             public void run() {
-                if(command.startCapture == true){
+                if(command.startCapture == true) {
                     takePicture();
                     Catch.cancel();
                 }
@@ -1085,17 +1095,13 @@ public class Camera_Fragment extends Fragment
         Catch.schedule(capture,4000,1000);
     }
 
-
-
     ProgressDialog progressDialog;
     Image_Captioning imgCaptioning= new Image_Captioning();
     OCR ocr = new OCR();
     VQA vqa = new VQA();
+    Set_Dialog setDialog = new Set_Dialog(mainContext);
 
-
-
-
-    private void catch_ttsEnd(){//Command에서 Localignment까지 종료시 실행.
+    private void catch_ttsEnd() { // Command에서 Localignment까지 종료시 실행.
         Log.i("what??",String.valueOf(tts.tts.isSpeaking()));
         Timer Catch = new Timer();
         TimerTask tts_end = new TimerTask() {
@@ -1107,6 +1113,7 @@ public class Camera_Fragment extends Fragment
                 }
             }
         };
+
         Catch.schedule(tts_end,1000,1000);
     }
 
@@ -1144,17 +1151,31 @@ public class Camera_Fragment extends Fragment
 
             @Override
             protected void onPreExecute() { // BackGround 작업이 시작되기 전에 맨처음에 작동하는 부분.
-
                 super.onPreExecute();
-                progressDialog = ProgressDialog.show(getContext(), "Image is Uploading", "Please Wait", false, false);
+                setDialog.setup();
+
+                /*
+                LayoutInflater inflater = (LayoutInflater)getContext().getSystemService(LAYOUT_INFLATER_SERVICE);
+                View view = inflater.inflate(R.layout.custum_alert_layout, null);
+                ImageView customIcon = (ImageView)view.findViewById(R.id.cumtomdialogicon);
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setView(view);
+
+                AlertDialog dialog = builder.create();
+                dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                dialog.show();
+                */
+                // progressDialog = ProgressDialog.show(getContext(), "Image is Uploading", "Please Wait", false, false);
                 // Showing progress dialog at image upload time.
+                setDialog.show();
             }
 
             @Override
             protected void onPostExecute(String string1) {// 맨 마지막에 한번만 실행되는 부분
                 catch_ttsEnd();
                 super.onPostExecute(string1);
-                progressDialog.dismiss();
+                //setDialog.dismiss();
+                //progressDialog.dismiss();
                 //Success_upload = true;
                 Log.i("target",string1);
                 if(string1 != "Fail To Connect"){

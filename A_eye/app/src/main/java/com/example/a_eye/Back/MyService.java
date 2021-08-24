@@ -31,8 +31,6 @@ public class MyService extends Service {
     /** 요놈이 중요 **/
     @Override
     public int onStartCommand(Intent intent, int flags, int startId){
-
-
         if(command.isalive == false){
             command.onSetup();
         }

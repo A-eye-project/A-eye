@@ -1,8 +1,12 @@
 package com.example.a_eye;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.example.a_eye.Camera.Camera_Fragment;
@@ -13,17 +17,27 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.i("status","onCreate");
-        setContentView(R.layout.activity_main);
         super.onCreate(savedInstanceState);
+
+        // 핸드폰 상단 시스템바 투명하게 해주는 부분
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            Window w = getWindow();
+            w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+        }
+
         if (null == savedInstanceState) {
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.container, Camera_Fragment.newInstance())
+                    .replace(R.id.container, Camera_Fragment.newInstance(this))
                     .commit();
         }
+
+        setContentView(R.layout.activity_main);
     }
+
     private void makeToast(String msg) {
         makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
     }
+
     //뒤로가기 버튼 눌렀을 때
     // 마지막으로 뒤로 가기 버튼을 눌렀던 시간 저장
     private long backKeyPressedTime = 0;
