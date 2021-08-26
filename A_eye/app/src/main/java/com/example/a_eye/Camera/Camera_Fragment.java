@@ -7,6 +7,7 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
@@ -30,10 +31,14 @@ import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.Vibrator;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.Size;
@@ -44,21 +49,27 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.example.a_eye.Audio.Command;
+import com.example.a_eye.Audio.Recording;
 import com.example.a_eye.Audio.TTSAdapter;
 import com.example.a_eye.MainActivity;
 import com.example.a_eye.R;
 import com.example.a_eye.Server.Image_Captioning;
 import com.example.a_eye.Server.OCR;
 import com.example.a_eye.Server.VQA;
+import com.example.a_eye.Support.ForegroundService;
 import com.example.a_eye.Support.Global_variable;
+import com.example.a_eye.Support.Select_Function;
 import com.example.a_eye.Support.Set_Dialog;
 
 import org.json.JSONException;
@@ -81,12 +92,16 @@ public class Camera_Fragment extends Fragment
 
     /**
      * upload {@link }
-     * 맨 마지막줄
+     * 맨 마지막 부분
      * Caputre {@Link}
      * 242 번째 줄
      *
      */
+    // 오버레이 권한 획득
+    public static int ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE= 5469;
 
+    // 진동 객체
+    private Vibrator vibrator;
     /**
      * Conversion from screen rotation to JPEG orientation.
      */
@@ -454,8 +469,8 @@ public class Camera_Fragment extends Fragment
     @Override
     public void onViewCreated(final View view, Bundle savedInstanceState) {
         mTextureView = (AutoFitTextureView) view.findViewById(R.id.texture); // 화면 그자체 com.example.android.camera2basic.AutoFitTextureView
-        tts = TTSAdapter.getInstance(getContext());
-        command = new Command(getContext());
+        vibrator = (Vibrator)mainContext.getSystemService(mainContext.VIBRATOR_SERVICE);
+        //command = new Command(getContext());
     }
 
     @Override
@@ -476,10 +491,12 @@ public class Camera_Fragment extends Fragment
 
     @Override
     public void onPause() {
+        Log.i("here2","onStop");
         closeCamera();
         stopBackgroundThread();
         super.onPause();
     }
+
 
     public boolean permissionCheck(){
         //권한이 허용되어 있는지 확인한다.
@@ -669,7 +686,7 @@ public class Camera_Fragment extends Fragment
 
     //카메라 장치를 여는 것 설정하는 메소드
     private void openCamera(int width, int height) {
-        if(permissionCheck() == false) return;
+        if(permission_complete == false) if(permissionCheck() == false) return;
         if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
             requestCameraPermission();
@@ -787,12 +804,13 @@ public class Camera_Fragment extends Fragment
                             // 여기서 Command Setup
                             if (permission_complete == false) {
                                 permission_complete = true;
+                                vibrator.vibrate(500);
                                 timer.postDelayed(new Runnable() {
                                     @Override
                                     public void run() {
-                                        SetupCommand();
+                                        get_record_string();
                                     }
-                                },1000);
+                                },2000);
                             }
 
                             // When the session is ready, we start displaying the preview.
@@ -1065,131 +1083,167 @@ public class Camera_Fragment extends Fragment
         }
     }
 
-    //안드로이드 명령어 변수
-    private Command command;
 
-    // tts 변수
-    private TTSAdapter tts = null; //TTS 사용하고자 한다면 1) 클래스 객체 선언
-
-    private void SetupCommand() {
-        timer.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                command.onSetup();
-                catch_catpture();
-            }
-        },1000);
-    }
-
-    private void catch_catpture() { // Command에서 Localignment까지 종료시 실행.
-        Timer Catch = new Timer();
-        TimerTask capture = new TimerTask() {
-            @Override
-            public void run() {
-                if(command.startCapture == true) {
-                    takePicture();
-                    Catch.cancel();
-                }
-            }
-        };
-        Catch.schedule(capture,4000,1000);
-    }
-
-    ProgressDialog progressDialog;
+    //각종 변수
+    private boolean isstart = false;
+    private AsyncTaskUploadClass AsyncTaskUploadClassOBJ;
     Image_Captioning imgCaptioning= new Image_Captioning();
     OCR ocr = new OCR();
     VQA vqa = new VQA();
+    Timer Catch = null;
     Set_Dialog setDialog = new Set_Dialog(mainContext);
 
-    private void catch_ttsEnd() { // Command에서 Localignment까지 종료시 실행.
-        Log.i("what??",String.valueOf(tts.tts.isSpeaking()));
-        Timer Catch = new Timer();
+    private void catch_ttsEnd() { // tts 끝날 시 종료
+        Log.i("what??",String.valueOf(MainActivity.myspeaker.tts.isSpeaking()));
+        Catch = new Timer();
         TimerTask tts_end = new TimerTask() {
             @Override
             public void run() {
-                if(tts.tts.isSpeaking() == false){
+                if(MainActivity.myspeaker.tts.isSpeaking() == false){
                     Catch.cancel();
-                    SetupCommand();
+                    end();
                 }
             }
         };
-
         Catch.schedule(tts_end,1000,1000);
+    }
+    private Intent serviceIntent;
+
+    public void end(){ // 실행중인 작업들 모두 종료 시키기
+        if(isstart == true) AsyncTaskUploadClassOBJ.cancel(true);
+        removeFragment(this);
+        getActivity().finish();
+
+    }
+    private void removeFragment(Fragment fragment) {
+        if (fragment != null) {
+            FragmentManager mFragmentManager = getActivity().getSupportFragmentManager();
+            final FragmentTransaction mFragmentTransaction = mFragmentManager.beginTransaction();
+            mFragmentTransaction.remove(fragment);
+            mFragmentTransaction.commit();
+            fragment.onDestroy();
+        }
+    }
+
+    public void start_service(){
+        if (ForegroundService.serviceIntent==null) {
+            mainContext.startService(new Intent(mainContext, ForegroundService.class));
+        } else {
+            serviceIntent = ForegroundService.serviceIntent;//getInstance().getApplication();
+            Toast.makeText(mainContext, "already", Toast.LENGTH_LONG).show();
+        }
     }
 
     private void ImageUploadToServer(){
-        class AsyncTaskUploadClass extends AsyncTask<Void,Void,String> {
+        isstart = true;
+        AsyncTaskUploadClassOBJ = new AsyncTaskUploadClass();
+        AsyncTaskUploadClassOBJ.execute();
+    }
+    class AsyncTaskUploadClass extends AsyncTask<Void,Void,String> {
 
-            @Override
-            protected String doInBackground(Void... params) { // BackGround에서 동작하는 부분.
+        @Override
+        protected String doInBackground(Void... params) { // BackGround에서 동작하는 부분.
 
-                String res = null;
-                switch (Global_variable.choice) {
-                    case 0: // OCR
-                        Log.i("cur","OCR");
-                        Global_variable.set_imgString(false);
-                        res = ocr.getOcrRes();
-                        break;
-                    case 1:  // ImageCaption
-                        Log.i("cur","ImageCaption");
-                        res = imgCaptioning.getCaption();
-                        break;
-                    case 2: // VQA
-                        Log.i("cur","VQA");
-                        Global_variable.set_imgString(true);
-                        try {
-                            Global_variable.set_Json();
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                        res = vqa.getAns();
-                    default:
-                        break;
+            String res = null;
+            switch (Global_variable.choice) {
+                case 0: // OCR
+                    Log.i("cur","OCR");
+                    Global_variable.set_imgString(false);
+                    res = ocr.getOcrRes();
+                    break;
+                case 1:  // ImageCaption
+                    Log.i("cur","ImageCaption");
+                    res = imgCaptioning.getCaption();
+                    break;
+                case 2: // VQA
+                    Log.i("cur","VQA");
+                    Global_variable.set_imgString(true);
+                    try {
+                        Global_variable.set_Json();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    res = vqa.getAns();
+                default:
+                    break;
+            }
+            return res;
+        }
+
+        @Override
+        protected void onCancelled(){
+            end();
+        }
+
+        @Override
+        protected void onPreExecute() { // BackGround 작업이 시작되기 전에 맨처음에 작동하는 부분.
+            super.onPreExecute();
+            setDialog.setup();
+            setDialog.show();
+        }
+
+        @Override
+        protected void onPostExecute(String string1) {// 맨 마지막에 한번만 실행되는 부분
+            catch_ttsEnd();
+            super.onPostExecute(string1);
+            setDialog.dismiss();
+            Log.i("target",string1);
+            if(string1 != "Fail To Connect"){
+                Global_variable.ttxString = string1;
+                MainActivity.myspeaker.speak(Global_variable.ttxString);
+            }
+            else{
+                MainActivity.myspeaker.speak("서버와의 연결에 실패했습니다.");
+            }
+            isstart = false;
+        }
+    }
+
+    private String Result;
+
+    private void get_record_string(){
+        Recording myRecord = new Recording();
+        new Thread(new Runnable() { //새 Thread에서 녹음 시작
+            public void run() {
+                try {
+                    Log.i("cur","Recording.. ");
+                    myRecord.Start_record();
+                } catch (RuntimeException e) {
+                    Log.i("Error", e.getMessage());
+                    return;
                 }
-                return res;
             }
-
+        }).start();
+        timer.postDelayed(new Runnable(){ // 녹음 하는 시간 지연
             @Override
-            protected void onPreExecute() { // BackGround 작업이 시작되기 전에 맨처음에 작동하는 부분.
-                super.onPreExecute();
-                setDialog.setup();
-
-                /*
-                LayoutInflater inflater = (LayoutInflater)getContext().getSystemService(LAYOUT_INFLATER_SERVICE);
-                View view = inflater.inflate(R.layout.custum_alert_layout, null);
-                ImageView customIcon = (ImageView)view.findViewById(R.id.cumtomdialogicon);
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setView(view);
-
-                AlertDialog dialog = builder.create();
-                dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-                dialog.show();
-                */
-                // progressDialog = ProgressDialog.show(getContext(), "Image is Uploading", "Please Wait", false, false);
-                // Showing progress dialog at image upload time.
-                setDialog.show();
-            }
-
-            @Override
-            protected void onPostExecute(String string1) {// 맨 마지막에 한번만 실행되는 부분
-                catch_ttsEnd();
-                super.onPostExecute(string1);
-                //setDialog.dismiss();
-                //progressDialog.dismiss();
-                //Success_upload = true;
-                Log.i("target",string1);
-                if(string1 != "Fail To Connect"){
-                    Global_variable.ttxString = string1;
-                    tts.speak(Global_variable.ttxString);
+            public void run(){
+                myRecord.Stop_record(); // 녹음 종료
+                Log.i("cur","Reconizing.. ");
+                int status = myRecord.net_com(); // 녹음 파일 -> String으로 바꾸는 API 통신 , return값은 통신 상태
+                if(status == 1){
+                    Result = myRecord.get_re();
+                    Log.i("cur",Result);
+                    get_num();
                 }
                 else{
-                    tts.speak("서버와의 연결에 실패했습니다.");
+                    if(status == -2){
+                        Log.i("cur","No response from server for 20 secs");
+                    }
+                    else{
+                        Log.i("cur","Interrupted");
+                    }
                 }
             }
-        }
-        AsyncTaskUploadClass AsyncTaskUploadClassOBJ = new AsyncTaskUploadClass();
+        },3000); // 녹음 시간 -> 현재 3초
 
-        AsyncTaskUploadClassOBJ.execute();
+
+    }
+
+    private void get_num(){
+        Select_Function my = new Select_Function();
+        my.Set_str(" "+ Result.replaceAll(" ",""));
+        my.Local_Alignment();
+        takePicture();
     }
 
 }

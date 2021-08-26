@@ -1,10 +1,14 @@
 package com.example.a_eye.Audio;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Vibrator;
 import android.util.Log;
+
+import com.example.a_eye.MainActivity;
+import com.example.a_eye.Support.ForegroundService;
 import com.example.a_eye.Support.Select_Function;
 import com.example.a_eye.Support.Set_Dialog;
 
@@ -18,6 +22,8 @@ import edu.cmu.pocketsphinx.RecognitionListener;
 import edu.cmu.pocketsphinx.SpeechRecognizer;
 import edu.cmu.pocketsphinx.SpeechRecognizerSetup;
 
+import static androidx.core.content.ContextCompat.startActivity;
+
 public class Command implements RecognitionListener {
     // 활성 키워드
     private static final String KWS_SEARCH = "wakeup";
@@ -25,9 +31,9 @@ public class Command implements RecognitionListener {
     //변수
     public static boolean startCapture;
     public static boolean isalive;
-    private Handler mHandler = new Handler();;
-    private String Result;
-    private Vibrator vibrator;
+
+
+    private Handler mHandler = new Handler();
 
     // 디코더
     private SpeechRecognizer recognizer;
@@ -36,7 +42,6 @@ public class Command implements RecognitionListener {
 
     public Command(Context context) {
         myContext = context;
-        vibrator = (Vibrator)context.getSystemService(context.VIBRATOR_SERVICE);
     }
 
     public void onSetup() {
@@ -83,17 +88,23 @@ public class Command implements RecognitionListener {
 
         String text = hypothesis.getHypstr();
         if (text.equals(KEYPHRASE)) {
-            recognizer.stop();
-            vibrator.vibrate(500);
+            ForegroundService.service = false;
+            cancel();
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    get_record_string();
+                    call_main();
+
                 }
-            },500); // 화면 보여주는 시간
+            },500);
         }
     }
-
+    public void call_main(){
+        Log.i("start","call_main");
+        Intent intent = new Intent(myContext, MainActivity.class);
+        startActivity(myContext,intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),null);
+        //Catch.cancel();
+    }
     @Override
     public void onResult(Hypothesis hypothesis) {
         if (hypothesis != null) {
@@ -142,47 +153,4 @@ public class Command implements RecognitionListener {
         recognizer.shutdown();
     }
 
-    private void get_record_string(){
-        Recording myRecord = new Recording();
-        new Thread(new Runnable() { //새 Thread에서 녹음 시작
-            public void run() {
-                try {
-                    Log.i("cur","Recording.. ");
-                    myRecord.Start_record();
-                } catch (RuntimeException e) {
-                    Log.i("Error", e.getMessage());
-                    return;
-                }
-            }
-        }).start();
-        mHandler.postDelayed(new Runnable(){ // 녹음 하는 시간 지연
-            @Override
-            public void run(){
-                myRecord.Stop_record(); // 녹음 종료
-                Log.i("cur","Reconizing.. ");
-                int status = myRecord.net_com(); // 녹음 파일 -> String으로 바꾸는 API 통신 , return값은 통신 상태
-                if(status == 1){
-                    Result = myRecord.get_re();
-                    Log.i("cur",Result);
-                    get_num();
-                }
-                else{
-                    if(status == -2){
-                        Log.i("cur","No response from server for 20 secs");
-                    }
-                    else{
-                        Log.i("cur","Interrupted");
-                    }
-                }
-            }
-        },3000); // 녹음 시간 -> 현재 3초
-    }
-
-    private void get_num(){
-        Select_Function my = new Select_Function();
-        my.Set_str(" "+ Result.replaceAll(" ",""));
-        my.Local_Alignment();
-        isalive = false;
-        startCapture = true;
-    }
 }

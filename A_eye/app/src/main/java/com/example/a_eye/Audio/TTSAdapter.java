@@ -2,6 +2,7 @@ package com.example.a_eye.Audio;
 
 import android.content.Context;
 import android.speech.tts.TextToSpeech;
+import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -15,23 +16,14 @@ public class TTSAdapter extends AppCompatActivity implements TextToSpeech.OnInit
     private static TTSAdapter instance = null;
 
     // 생성자: private
-    private TTSAdapter(Context context) {
+    public TTSAdapter(Context context) {
         tts = new TextToSpeech(context, this);
-    }
-
-    // singleton pattern
-    public synchronized static TTSAdapter getInstance(Context context) {
-        if (instance == null) {
-            instance = new TTSAdapter(context);
-        }
-
-        instance.stop();
-        return instance;
     }
 
     //TTS 객체를 생성하면 호출되는 메소드
     @Override
     public void onInit(int status) {
+        Log.i("status ", String.valueOf(status));
         if (status != TextToSpeech.ERROR) { //TTS의 상태가 정상이라면
             tts.setLanguage(Locale.KOREAN); //언어-한국어 설정
             tts.setPitch(0.8f);             //음성 톤 (1.0f 기본)
