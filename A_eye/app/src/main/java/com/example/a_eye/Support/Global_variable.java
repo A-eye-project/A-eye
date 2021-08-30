@@ -14,6 +14,7 @@ import java.util.Base64;
 
 public class Global_variable extends Application {
     public static int choice;
+    public static Bitmap img;
     public static Bitmap resized;
     public static String question;
     public static String imgString;
@@ -38,6 +39,7 @@ public class Global_variable extends Application {
     @Override
     public void onCreate(){
         resized = null;
+        img = null;
         question = "";
         ttxString = "";
         imgString = "";
@@ -55,7 +57,8 @@ public class Global_variable extends Application {
     @RequiresApi(api = Build.VERSION_CODES.O)
     public static void set_imgString(boolean flag) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        resized.compress(Bitmap.CompressFormat.PNG, 100, baos);
+        if(flag) resized.compress(Bitmap.CompressFormat.PNG, 100, baos); // VQA
+        else img.compress(Bitmap.CompressFormat.PNG, 100, baos); // OCR
         byte[] bytes = baos.toByteArray();
         String temp = Base64.getEncoder().encodeToString(bytes);
         try {

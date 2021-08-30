@@ -40,7 +40,6 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -924,6 +923,7 @@ public class Camera_Fragment extends Fragment
                         bitmap = byteArrayToBitmap(bytes);
                         bitmap = rotatingImageView(rotation,bitmap);
 
+                        Global_variable.img = bitmap;
                         // VQA랑 ImageCaption 만  이미지 조절 해야할거 같음. (확인)
                         Global_variable.resized = Bitmap.createScaledBitmap(bitmap, 480, 640, true);
                         ImageUploadToServer();
