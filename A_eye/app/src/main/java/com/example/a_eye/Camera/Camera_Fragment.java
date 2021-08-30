@@ -1196,6 +1196,7 @@ public class Camera_Fragment extends Fragment
         if ((Global_variable.question.contains("꺼줘") == true)||(Global_variable.question.contains("꺼져") == true)||(Global_variable.question.contains("꺼저") == true)||(Global_variable.question.contains("꿔저") == true)){
             getActivity().stopService(MainActivity.serviceIntent);
             getActivity().finish();
+            //getActivity().finishAndRemoveTask();// 프로세스 종료
         } else {
             takePicture();
         }
