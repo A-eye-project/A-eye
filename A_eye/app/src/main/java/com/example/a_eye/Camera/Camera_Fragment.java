@@ -483,6 +483,14 @@ public class Camera_Fragment extends Fragment
         //closeAudio();
         closeCamera();
         stopBackgroundThread();
+
+        try {
+            Catch.cancel();
+            TTS.cancel();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         super.onPause();
     }
 
@@ -657,14 +665,17 @@ public class Camera_Fragment extends Fragment
 
     //카메라 장치를 여는 것 설정하는 메소드
     private void openCamera(int width, int height) {
-        if(permission_complete == false) if(permissionCheck() == false) return;
-        if(ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
-        {
+        if (permission_complete == false) {
+            if(permissionCheck() == false) return;
+        }
+
+        if(ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(getActivity(),new String[]{
                     Manifest.permission.CAMERA
             },REQUEST_CAMERA_PERMISSION);
             return;
         }
+
         setUpCameraOutputs(width, height);
         configureTransform(width, height);
         Activity activity = getActivity();
@@ -693,6 +704,7 @@ public class Camera_Fragment extends Fragment
      * Closes the current {@link CameraDevice}.
      */
     private void closeCamera() {
+        Log.d("카메라", "카메라 닫힘");
         try {
             mCameraOpenCloseLock.acquire();
             if (null != mCaptureSession) {
@@ -755,7 +767,7 @@ public class Camera_Fragment extends Fragment
     private void updatePreview() {
         Log.i("target","Update");
         if(mCameraDevice == null) //카메라를 연결하고 업데이트 메소드를 호출했는데, 만약 카메라 장치가 null값이면 에러 출력
-            Toast.makeText(getActivity(), "Error", Toast.LENGTH_SHORT).show();
+            Log.i("카메라 디바이스","NULL");
         //다시 빌더 셋팅
         mPreviewRequestBuilder.set(CaptureRequest.CONTROL_MODE,CaptureRequest.CONTROL_MODE_AUTO);
         try{
@@ -765,7 +777,7 @@ public class Camera_Fragment extends Fragment
         }
     }
 
-    private boolean permission_complete = false;
+    public static boolean permission_complete = false;
     private void createCameraPreviewSession() {
         try {
             SurfaceTexture texture = mTextureView.getSurfaceTexture();
@@ -827,6 +839,7 @@ public class Camera_Fragment extends Fragment
         if (null == mTextureView || null == mPreviewSize || null == activity) {
             return;
         }
+
         int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
         Matrix matrix = new Matrix();
         RectF viewRect = new RectF(0, 0, viewWidth, viewHeight);
@@ -857,10 +870,10 @@ public class Camera_Fragment extends Fragment
         //장치 잘 있으면 카메라 서비스 연결
         CameraManager manager = (CameraManager) getActivity().getSystemService(Context.CAMERA_SERVICE);
         try{
-            //많은 카메라 중 현재 연결된 camera의 특징을 받아온다.
+            //많은 카메라 중 현재 연결된 camera 의 특징을 받아온다.
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(mCameraDevice.getId());
 
-            //일단 사진 크기는 null값
+            //일단 사진 크기는 null 값
             Size[] jpegSizes = null;
 
             //특징 값이 있다면
@@ -872,8 +885,6 @@ public class Camera_Fragment extends Fragment
             //캡처 이미지 사이즈 설정
             int width = mTextureView.getWidth();
             int height = mTextureView.getHeight();
-            //int width = 640;
-            //int height = 480;
 
             if(jpegSizes != null && jpegSizes.length > 0) {
                 width = jpegSizes[0].getWidth();
@@ -1098,17 +1109,19 @@ public class Camera_Fragment extends Fragment
     Set_Dialog setDialog = new Set_Dialog(mainContext);
     TTSAdapter myspeaker = new TTSAdapter(mainContext);
 
+    Timer Catch;
+    Timer TTS;
+
     private void catch_start_recording() { //
-        Timer Catch = new Timer();
+        Catch = new Timer();
         TimerTask start_recording = new TimerTask() {
             @Override
             public void run() {
-                if(CommandService.command.startFunction == true){
+                if (CommandService.command.startFunction == true){
                     get_record_string();
                     CommandService.command.startFunction = false;
                     Catch.cancel();
                 }
-
             }
         };
 
@@ -1117,23 +1130,29 @@ public class Camera_Fragment extends Fragment
 
     // TTS 가 끝나면
     private void catch_ttsEnd() { // tts 끝날 시 종료
-        Timer TTS = new Timer();
+        TTS = new Timer();
         TimerTask tts_end = new TimerTask() {
             @Override
             public void run() {
-                if(myspeaker.tts.isSpeaking() == false) {
-                    CommandService.command.StartListening();
+                if (myspeaker.tts.isSpeaking() == false) {
+                    CommandService.start_listening();
+                    catch_start_recording();
                     TTS.cancel();
+
+                    if (Global_variable.behind_app) {
+                        getActivity().finish();
+                    }
                 }
             }
         };
+
         TTS.schedule(tts_end,3000,1000);
     }
 
 
     // Core Function
     private void get_record_string(){
-        if(MainActivity.activity_die == true) return;
+        if (MainActivity.activity_die == true) return;
         Recording myRecord = new Recording();
         new Thread(new Runnable() { //새 Thread에서 녹음 시작
             public void run() {
@@ -1166,8 +1185,6 @@ public class Camera_Fragment extends Fragment
                 }
             }
         },3000); // 녹음 시간 -> 현재 3초
-
-
     }
 
     private void get_num(String Result){
@@ -1234,11 +1251,11 @@ public class Camera_Fragment extends Fragment
             super.onPostExecute(string1);
             setDialog.dismiss();
             Log.i("target",string1);
-            if(string1 != "Fail To Connect"){
+
+            if (string1 != "Fail To Connect") {
                 Global_variable.ttxString = string1;
                 myspeaker.speak(Global_variable.ttxString);
-            }
-            else{
+            } else {
                 myspeaker.speak("서버와의 연결에 실패했습니다.");
             }
         }

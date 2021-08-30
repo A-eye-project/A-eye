@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.Window;
@@ -74,6 +75,23 @@ public class MainActivity extends AppCompatActivity {
         if (System.currentTimeMillis() <= backKeyPressedTime + 2500) {
             if (CommandService.isStarted) stopService(serviceIntent);
             finish();
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        if (Global_variable.behind_app) { // 녹음 시작 및 카메라 액션이랑 이미지 업로드
+            Camera_Fragment.permission_complete = false;
+
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    CommandService.command.startFunction = true;
+                }
+            }, 1000);
         }
     }
 

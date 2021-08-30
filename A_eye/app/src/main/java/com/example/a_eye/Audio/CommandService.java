@@ -46,7 +46,8 @@ public class CommandService extends Service {
         command = new Command(getApplicationContext(), mykey);
         command.onSetup();
     }
-    public static void start_listening(){
+
+    public static void start_listening() {
         command.recognizer.startListening(command.KWS_SEARCH);
     }
 

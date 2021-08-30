@@ -1,5 +1,6 @@
 package com.example.a_eye.Audio;
 
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -15,6 +16,7 @@ import com.example.a_eye.Support.Global_variable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.List;
 
 import edu.cmu.pocketsphinx.Assets;
 import edu.cmu.pocketsphinx.Hypothesis;
@@ -105,7 +107,7 @@ public class Command implements RecognitionListener {
         }
     }
 
-    private void launch_fun() { // (확인)
+    public void launch_fun() { // (확인)
         if (Global_variable.behind_app) {
                 /*
                  어플리케이션이 감춰진 상태에서 부르는 상황 고로
@@ -139,16 +141,13 @@ public class Command implements RecognitionListener {
     }
 
     public void call_main(){
-        /*
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-        {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
             final ActivityManager activityManager = (ActivityManager) myContext.getSystemService(Context.ACTIVITY_SERVICE);
             final List<ActivityManager.RecentTaskInfo> recentTasks = activityManager.getRecentTasks(Integer.MAX_VALUE, ActivityManager.RECENT_IGNORE_UNAVAILABLE);
 
             ActivityManager.RecentTaskInfo recentTaskInfo = null;
 
-            for (int i = 0; i < recentTasks.size(); i++)
-            {
+            for (int i = 0; i < recentTasks.size(); i++) {
                 Log.i("pack_name",recentTasks.get(i).baseIntent.getComponent().getPackageName());
                 if (recentTasks.get(i).baseIntent.getComponent().getPackageName().contains("com.example.a_eye")) {
                     recentTaskInfo = recentTasks.get(i);
@@ -156,18 +155,19 @@ public class Command implements RecognitionListener {
                 }
             }
 
-            if(recentTaskInfo != null && recentTaskInfo.id > -1) {
+            if (recentTaskInfo != null && recentTaskInfo.id > -1) {
                 MainActivity.activity_die = false;
                 activityManager.moveTaskToFront(recentTaskInfo.persistentId, ActivityManager.MOVE_TASK_WITH_HOME);
 
                 return;
             }
-        } */
+        }
 
-
+        /*
         Log.i("start","call_main");
         Intent intent = new Intent(myContext, MainActivity.class);
         startActivity(myContext,intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),null);
+         */
     }
     @Override
     public void onResult(Hypothesis hypothesis) {
@@ -192,7 +192,7 @@ public class Command implements RecognitionListener {
                 .setAcousticModel(new File(assetsDir, "en-us-ptm"))
                 .setDictionary(new File(assetsDir, "cmudict-en-us.dict"))
                 .setRawLogDir(assetsDir)
-                .setKeywordThreshold(1e-10f)
+                .setKeywordThreshold(1e-3f)
                 .getRecognizer();
 
         recognizer.addListener(this);
