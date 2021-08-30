@@ -30,6 +30,7 @@ public class Get_string {
     public static String sendDataAndGetResult (byte [] speechData ,int lenSpeech) {
         String openApiURL = "";
         String accessKey = "";
+
         String audioContents;
 
 

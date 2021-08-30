@@ -4,21 +4,17 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
-import android.graphics.drawable.ColorDrawable;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -26,19 +22,15 @@ import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
-import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.os.Vibrator;
-import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.Size;
@@ -48,18 +40,16 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 
-import com.example.a_eye.Audio.Command;
+import com.example.a_eye.Audio.CommandService;
 import com.example.a_eye.Audio.Recording;
 import com.example.a_eye.Audio.TTSAdapter;
 import com.example.a_eye.MainActivity;
@@ -67,7 +57,6 @@ import com.example.a_eye.R;
 import com.example.a_eye.Server.Image_Captioning;
 import com.example.a_eye.Server.OCR;
 import com.example.a_eye.Server.VQA;
-import com.example.a_eye.Support.ForegroundService;
 import com.example.a_eye.Support.Global_variable;
 import com.example.a_eye.Support.Select_Function;
 import com.example.a_eye.Support.Set_Dialog;
@@ -97,15 +86,17 @@ public class Camera_Fragment extends Fragment
      * 242 번째 줄
      *
      */
-    // 오버레이 권한 획득
-    public static int ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE= 5469;
-
-    // 진동 객체
-    private Vibrator vibrator;
     /**
      * Conversion from screen rotation to JPEG orientation.
      */
     private static Context mainContext;
+    /*
+
+    *My Variable
+
+     */
+    private Size imageDimension; //이미지 치수를 받아오고 전달하는 변수
+
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
     private static final int REQUEST_CAMERA_PERMISSION = 1;
     private static final String FRAGMENT_DIALOG = "dialog";
@@ -280,7 +271,7 @@ public class Camera_Fragment extends Fragment
                 buffer.get(bytes);
                 bitmap = byteArrayToBitmap(bytes);
                 bitmap = rotatingImageView(rotation,bitmap);
-                Global_variable.img = bitmap;
+                Global_variable.resized = Bitmap.createScaledBitmap(bitmap, 480, 640, true);
                 ImageUploadToServer();
             }finally {
                 if (image != null) image.close();
@@ -313,11 +304,6 @@ public class Camera_Fragment extends Fragment
      */
     private CaptureRequest mPreviewRequest;
 
-    /**
-     * The current state of camera state for taking pictures.
-     *
-     * @see #mCaptureCallback
-     */
     private int mState = STATE_PREVIEW;
 
     /**
@@ -338,6 +324,7 @@ public class Camera_Fragment extends Fragment
     /**
      * A {@link CameraCaptureSession.CaptureCallback} that handles events related to JPEG capture.
      */
+    /*
     private CameraCaptureSession.CaptureCallback mCaptureCallback
             = new CameraCaptureSession.CaptureCallback() {
 
@@ -387,6 +374,7 @@ public class Camera_Fragment extends Fragment
             }
         }
 
+
         @Override
         public void onCaptureProgressed(@NonNull CameraCaptureSession session,
                                         @NonNull CaptureRequest request,
@@ -402,6 +390,7 @@ public class Camera_Fragment extends Fragment
         }
 
     };
+     */
 
     /**
      * Given {@code choices} of {@code Size}s supported by a camera, choose the smallest one that
@@ -469,7 +458,6 @@ public class Camera_Fragment extends Fragment
     @Override
     public void onViewCreated(final View view, Bundle savedInstanceState) {
         mTextureView = (AutoFitTextureView) view.findViewById(R.id.texture); // 화면 그자체 com.example.android.camera2basic.AutoFitTextureView
-        vibrator = (Vibrator)mainContext.getSystemService(mainContext.VIBRATOR_SERVICE);
         //command = new Command(getContext());
     }
 
@@ -492,6 +480,7 @@ public class Camera_Fragment extends Fragment
     @Override
     public void onPause() {
         Log.i("here2","onStop");
+        //closeAudio();
         closeCamera();
         stopBackgroundThread();
         super.onPause();
@@ -529,14 +518,6 @@ public class Camera_Fragment extends Fragment
             return true;
         }
 
-    }
-
-    private void requestCameraPermission() {
-        if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
-            new ConfirmationDialog().show(getChildFragmentManager(), FRAGMENT_DIALOG);
-        } else {
-            requestPermissions(new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
-        }
     }
 
     //권한에 대한 응답이 있을때 자동 작동하는 함수
@@ -590,15 +571,6 @@ public class Camera_Fragment extends Fragment
                 Size largest = Collections.max(
                         Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)),
                         new CompareSizesByArea());
-
-                // Find out if we need to swap dimension to get the preview size relative to sensor
-                // coordinate.
-                mImageReader = ImageReader.newInstance(largest.getWidth(), largest.getHeight(),
-                        ImageFormat.JPEG, /*maxImages*/2);
-
-                mImageReader.setOnImageAvailableListener(
-                        mOnImageAvailableListener, mBackgroundHandler);
-
 
                 int displayRotation = activity.getWindowManager().getDefaultDisplay().getRotation();
                 //noinspection ConstantConditions
@@ -667,7 +639,6 @@ public class Camera_Fragment extends Fragment
                 Boolean available = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
                 mFlashSupported = available == null ? false : available;
 
-                mCameraId = cameraId;
                 return;
             }
         } catch (CameraAccessException e) {
@@ -687,9 +658,11 @@ public class Camera_Fragment extends Fragment
     //카메라 장치를 여는 것 설정하는 메소드
     private void openCamera(int width, int height) {
         if(permission_complete == false) if(permissionCheck() == false) return;
-        if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-            requestCameraPermission();
+        if(ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
+        {
+            ActivityCompat.requestPermissions(getActivity(),new String[]{
+                    Manifest.permission.CAMERA
+            },REQUEST_CAMERA_PERMISSION);
             return;
         }
         setUpCameraOutputs(width, height);
@@ -699,6 +672,11 @@ public class Camera_Fragment extends Fragment
         //카메라 관리하는 매니저 객체
         CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
         try {
+            mCameraId = manager.getCameraIdList()[0];  //모든 카메라 종류 중에서 가장 기본 카메라인 0번째 카메라 설정
+            CameraCharacteristics characteristics = manager.getCameraCharacteristics(mCameraId); //0번째 카메라 특성 변수
+            StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+            assert map != null;
+            imageDimension = map.getOutputSizes(SurfaceTexture.class)[0];
             //카메라 권한 관련
             if (!mCameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
                 throw new RuntimeException("Time out waiting to lock camera opening.");
@@ -773,13 +751,27 @@ public class Camera_Fragment extends Fragment
      * Creates a new {@link CameraCaptureSession} for camera preview.
      */
 
+    //카메라 화면이 업데이트 될 때 실행되는 메소드
+    private void updatePreview() {
+        Log.i("target","Update");
+        if(mCameraDevice == null) //카메라를 연결하고 업데이트 메소드를 호출했는데, 만약 카메라 장치가 null값이면 에러 출력
+            Toast.makeText(getActivity(), "Error", Toast.LENGTH_SHORT).show();
+        //다시 빌더 셋팅
+        mPreviewRequestBuilder.set(CaptureRequest.CONTROL_MODE,CaptureRequest.CONTROL_MODE_AUTO);
+        try{
+            mCaptureSession.setRepeatingRequest(mPreviewRequestBuilder.build(),null,mBackgroundHandler);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
     private boolean permission_complete = false;
     private void createCameraPreviewSession() {
         try {
             SurfaceTexture texture = mTextureView.getSurfaceTexture();
             assert texture != null;
 
-            // We configure the size of default buffer to be the size of camera preview we want.
+            //이미지 크기 설정
             texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
 
             // This is the output Surface we need to start preview.
@@ -790,10 +782,8 @@ public class Camera_Fragment extends Fragment
                     = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             mPreviewRequestBuilder.addTarget(surface);
 
-            // Here, we create a CameraCaptureSession for camera preview.
-            mCameraDevice.createCaptureSession(Arrays.asList(surface, mImageReader.getSurface()),
-                    new CameraCaptureSession.StateCallback() {
-
+            //카메라 입장에서 사진촬영 위와 동일함.
+            mCameraDevice.createCaptureSession(Arrays.asList(surface), new CameraCaptureSession.StateCallback() {
                         @Override
                         public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
                             // The camera is already closed
@@ -801,33 +791,14 @@ public class Camera_Fragment extends Fragment
                                 return;
                             }
 
-                            // 여기서 Command Setup
-                            if (permission_complete == false) {
-                                permission_complete = true;
-                                vibrator.vibrate(500);
-                                timer.postDelayed(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        get_record_string();
-                                    }
-                                },2000);
-                            }
-
                             // When the session is ready, we start displaying the preview.
                             mCaptureSession = cameraCaptureSession;
-                            try {
-                                // Auto focus should be continuous for camera preview.
-                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
-                                        CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-                                // Flash is automatically enabled when necessary.
-                                setAutoFlash(mPreviewRequestBuilder);
+                            updatePreview();//화면 업데이트 메소드 호출
 
-                                // Finally, we start displaying the camera preview.
-                                mPreviewRequest = mPreviewRequestBuilder.build();
-                                mCaptureSession.setRepeatingRequest(mPreviewRequest,
-                                        mCaptureCallback, mBackgroundHandler);
-                            } catch (CameraAccessException e) {
-                                e.printStackTrace();
+                            // Catch Start Recording
+                            if (permission_complete == false) {
+                                permission_complete = true;
+                                catch_start_recording();
                             }
                         }
 
@@ -880,48 +851,113 @@ public class Camera_Fragment extends Fragment
      * Initiate a still image capture.
      */
     private void takePicture() {
-        lockFocus();
-    }
+        //장치가 비어있으면 사진을 찍을 수 없으므로 return
+        if (mCameraDevice == null) return;
 
-    /**
-     * Lock the focus as the first step for a still image capture.
-     */
-    private void lockFocus() {
-        try {
-            // This is how to tell the camera to lock focus.
-            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
-                    CameraMetadata.CONTROL_AF_TRIGGER_START);
-            // Tell #mCaptureCallback to wait for the lock.
-            mState = STATE_WAITING_LOCK;
-            mCaptureSession.capture(mPreviewRequestBuilder.build(), mCaptureCallback,
-                    mBackgroundHandler);
+        //장치 잘 있으면 카메라 서비스 연결
+        CameraManager manager = (CameraManager) getActivity().getSystemService(Context.CAMERA_SERVICE);
+        try{
+            //많은 카메라 중 현재 연결된 camera의 특징을 받아온다.
+            CameraCharacteristics characteristics = manager.getCameraCharacteristics(mCameraDevice.getId());
+
+            //일단 사진 크기는 null값
+            Size[] jpegSizes = null;
+
+            //특징 값이 있다면
+            if (characteristics != null) {
+                //카메라 특징에 맞게 사진 크기 설정
+                jpegSizes = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP).getOutputSizes(ImageFormat.JPEG);
+            }
+
+            //캡처 이미지 사이즈 설정
+            int width = mTextureView.getWidth();
+            int height = mTextureView.getHeight();
+            //int width = 640;
+            //int height = 480;
+
+            if(jpegSizes != null && jpegSizes.length > 0) {
+                width = jpegSizes[0].getWidth();
+                height = jpegSizes[0].getHeight();
+            }
+
+            ImageReader reader = ImageReader.newInstance(width,height, ImageFormat.JPEG,1);
+            List<Surface> outputSurface = new ArrayList<>(2);
+            outputSurface.add(reader.getSurface());
+            outputSurface.add(new Surface(mTextureView.getSurfaceTexture()));
+
+            //캡처 빌더 설정 > 사진 컨트롤, 초점 설정하는 것임.
+            final CaptureRequest.Builder captureBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
+            captureBuilder.addTarget(reader.getSurface());
+            captureBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+
+            //기본 장치 확인
+            int rotation1 = getActivity().getWindowManager().getDefaultDisplay().getRotation();
+            final int rotation = ORIENTATIONS.get(rotation1);
+
+            //이미지 읽어들이는 리스너
+            ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
+                @RequiresApi(api = Build.VERSION_CODES.O)
+                @Override
+                public void onImageAvailable(ImageReader reader) {
+                    Image image = null;
+                    Bitmap bitmap;
+                    byte[] bytes;
+                    ByteBuffer buffer;
+
+                    try {
+                        image = reader.acquireLatestImage();
+                        image.getFormat();
+                        buffer = image.getPlanes()[0].getBuffer();
+                        bytes = new byte[buffer.capacity()];
+                        buffer.get(bytes);
+                        bitmap = byteArrayToBitmap(bytes);
+                        bitmap = rotatingImageView(rotation,bitmap);
+
+                        // VQA랑 ImageCaption 만  이미지 조절 해야할거 같음. (확인)
+                        Global_variable.resized = Bitmap.createScaledBitmap(bitmap, 480, 640, true);
+                        ImageUploadToServer();
+                    } finally {
+                        if (image != null) image.close();
+                    }
+                }
+            };
+
+            reader.setOnImageAvailableListener(readerListener,mBackgroundHandler);
+
+            //사진 촬영 콜백
+            final CameraCaptureSession.CaptureCallback captureListener = new CameraCaptureSession.CaptureCallback() {
+                @Override
+                public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
+                    super.onCaptureCompleted(session, request, result);
+                    createCameraPreviewSession();
+                }
+            };
+
+            //카메라 입장에서 사진 촬영
+            mCameraDevice.createCaptureSession(outputSurface, new CameraCaptureSession.StateCallback() {
+                //설정
+                @Override
+                public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
+                    try{
+                        cameraCaptureSession.capture(captureBuilder.build(),captureListener,mBackgroundHandler);
+                    } catch (CameraAccessException e) {
+                        e.printStackTrace();
+                    }
+                }
+                //설정 실패
+                @Override
+                public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
+
+                }
+            },mBackgroundHandler);
+
+
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
     }
 
-    /**
-     * Run the precapture sequence for capturing a still image. This method should be called when
-     * we get a response in {@link #mCaptureCallback} from {@link #lockFocus()}.
-     */
-    private void runPrecaptureSequence() {
-        try {
-            // This is how to tell the camera to trigger.
-            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER,
-                    CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER_START);
-            // Tell #mCaptureCallback to wait for the precapture sequence to be set.
-            mState = STATE_WAITING_PRECAPTURE;
-            mCaptureSession.capture(mPreviewRequestBuilder.build(), mCaptureCallback,
-                    mBackgroundHandler);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Capture a still picture. This method should be called when we get a response in
-     * {@link #mCaptureCallback} from both {@link #lockFocus()}.
-     */
+    /*
     private void captureStillPicture() {
         try {
             final Activity activity = getActivity();
@@ -959,7 +995,7 @@ public class Camera_Fragment extends Fragment
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
-    }
+    }*/
 
     /**
      * Retrieves the JPEG orientation from the specified screen rotation.
@@ -979,6 +1015,7 @@ public class Camera_Fragment extends Fragment
      * Unlock the focus. This method should be called when still image capture sequence is
      * finished.
      */
+    /*
     private void unlockFocus() {
         try {
             // Reset the auto-focus trigger
@@ -1002,7 +1039,7 @@ public class Camera_Fragment extends Fragment
             requestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
                     CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
         }
-    }
+    }*/
 
 
     /**
@@ -1051,38 +1088,6 @@ public class Camera_Fragment extends Fragment
 
     }
 
-    /**
-     * Shows OK/Cancel confirmation dialog about camera permission.
-     */
-    public static class ConfirmationDialog extends DialogFragment {
-
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            final Fragment parent = getParentFragment();
-            return new AlertDialog.Builder(getActivity())
-                    .setMessage(R.string.request_permission)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            parent.requestPermissions(new String[]{Manifest.permission.CAMERA},
-                                    REQUEST_CAMERA_PERMISSION);
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel,
-                            new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    Activity activity = parent.getActivity();
-                                    if (activity != null) {
-                                        activity.finish();
-                                    }
-                                }
-                            })
-                    .create();
-        }
-    }
-
 
     //각종 변수
     private boolean isstart = false;
@@ -1090,47 +1095,92 @@ public class Camera_Fragment extends Fragment
     Image_Captioning imgCaptioning= new Image_Captioning();
     OCR ocr = new OCR();
     VQA vqa = new VQA();
-    Timer Catch = null;
     Set_Dialog setDialog = new Set_Dialog(mainContext);
+    TTSAdapter myspeaker = new TTSAdapter(mainContext);
 
+    private void catch_start_recording() { //
+        Timer Catch = new Timer();
+        TimerTask start_recording = new TimerTask() {
+            @Override
+            public void run() {
+                if(CommandService.command.startFunction == true){
+                    get_record_string();
+                    CommandService.command.startFunction = false;
+                    Catch.cancel();
+                }
+
+            }
+        };
+
+        Catch.schedule(start_recording,1000,300);
+    }
+
+    // TTS 가 끝나면
     private void catch_ttsEnd() { // tts 끝날 시 종료
-        Log.i("what??",String.valueOf(MainActivity.myspeaker.tts.isSpeaking()));
-        Catch = new Timer();
+        Timer TTS = new Timer();
         TimerTask tts_end = new TimerTask() {
             @Override
             public void run() {
-                if(MainActivity.myspeaker.tts.isSpeaking() == false){
-                    Catch.cancel();
-                    end();
+                if(myspeaker.tts.isSpeaking() == false) {
+                    CommandService.command.StartListening();
+                    TTS.cancel();
                 }
             }
         };
-        Catch.schedule(tts_end,1000,1000);
-    }
-    private Intent serviceIntent;
-
-    public void end(){ // 실행중인 작업들 모두 종료 시키기
-        if(isstart == true) AsyncTaskUploadClassOBJ.cancel(true);
-        removeFragment(this);
-        getActivity().finish();
-
-    }
-    private void removeFragment(Fragment fragment) {
-        if (fragment != null) {
-            FragmentManager mFragmentManager = getActivity().getSupportFragmentManager();
-            final FragmentTransaction mFragmentTransaction = mFragmentManager.beginTransaction();
-            mFragmentTransaction.remove(fragment);
-            mFragmentTransaction.commit();
-            fragment.onDestroy();
-        }
+        TTS.schedule(tts_end,3000,1000);
     }
 
-    public void start_service(){
-        if (ForegroundService.serviceIntent==null) {
-            mainContext.startService(new Intent(mainContext, ForegroundService.class));
+
+    // Core Function
+    private void get_record_string(){
+        if(MainActivity.activity_die == true) return;
+        Recording myRecord = new Recording();
+        new Thread(new Runnable() { //새 Thread에서 녹음 시작
+            public void run() {
+                try {
+                    Log.i("cur","Recording.. ");
+                    myRecord.Start_record();
+                } catch (RuntimeException e) {
+                    Log.i("Error", e.getMessage());
+                    return;
+                }
+            }
+        }).start();
+
+        timer.postDelayed(new Runnable(){ // 녹음 하는 시간 지연
+            @Override
+            public void run(){
+                myRecord.Stop_record(); // 녹음 종료
+                Log.i("cur","Reconizing.. ");
+                int status = myRecord.net_com(); // 녹음 파일 -> String으로 바꾸는 API 통신 , return값은 통신 상태
+                if(status == 1){
+                    String Result = myRecord.get_re();
+                    Log.i("cur",Result);
+                    get_num(Result);
+                } else {
+                    if (status == -2) {
+                        Log.i("cur","No response from server for 20 secs");
+                    } else {
+                        Log.i("cur","Interrupted");
+                    }
+                }
+            }
+        },3000); // 녹음 시간 -> 현재 3초
+
+
+    }
+
+    private void get_num(String Result){
+        Select_Function my = new Select_Function();
+        my.Set_str(" "+ Result.replaceAll(" ",""));
+        my.Local_Alignment();
+
+        // 음성인식 종료
+        if ((Global_variable.question.contains("꺼줘") == true)||(Global_variable.question.contains("꺼져") == true)||(Global_variable.question.contains("꺼저") == true)||(Global_variable.question.contains("꿔저") == true)){
+            getActivity().stopService(MainActivity.serviceIntent);
+            getActivity().finish();
         } else {
-            serviceIntent = ForegroundService.serviceIntent;//getInstance().getApplication();
-            Toast.makeText(mainContext, "already", Toast.LENGTH_LONG).show();
+            takePicture();
         }
     }
 
@@ -1139,6 +1189,7 @@ public class Camera_Fragment extends Fragment
         AsyncTaskUploadClassOBJ = new AsyncTaskUploadClass();
         AsyncTaskUploadClassOBJ.execute();
     }
+
     class AsyncTaskUploadClass extends AsyncTask<Void,Void,String> {
 
         @Override
@@ -1171,11 +1222,6 @@ public class Camera_Fragment extends Fragment
         }
 
         @Override
-        protected void onCancelled(){
-            end();
-        }
-
-        @Override
         protected void onPreExecute() { // BackGround 작업이 시작되기 전에 맨처음에 작동하는 부분.
             super.onPreExecute();
             setDialog.setup();
@@ -1190,60 +1236,11 @@ public class Camera_Fragment extends Fragment
             Log.i("target",string1);
             if(string1 != "Fail To Connect"){
                 Global_variable.ttxString = string1;
-                MainActivity.myspeaker.speak(Global_variable.ttxString);
+                myspeaker.speak(Global_variable.ttxString);
             }
             else{
-                MainActivity.myspeaker.speak("서버와의 연결에 실패했습니다.");
+                myspeaker.speak("서버와의 연결에 실패했습니다.");
             }
-            isstart = false;
         }
     }
-
-    private String Result;
-
-    private void get_record_string(){
-        Recording myRecord = new Recording();
-        new Thread(new Runnable() { //새 Thread에서 녹음 시작
-            public void run() {
-                try {
-                    Log.i("cur","Recording.. ");
-                    myRecord.Start_record();
-                } catch (RuntimeException e) {
-                    Log.i("Error", e.getMessage());
-                    return;
-                }
-            }
-        }).start();
-        timer.postDelayed(new Runnable(){ // 녹음 하는 시간 지연
-            @Override
-            public void run(){
-                myRecord.Stop_record(); // 녹음 종료
-                Log.i("cur","Reconizing.. ");
-                int status = myRecord.net_com(); // 녹음 파일 -> String으로 바꾸는 API 통신 , return값은 통신 상태
-                if(status == 1){
-                    Result = myRecord.get_re();
-                    Log.i("cur",Result);
-                    get_num();
-                }
-                else{
-                    if(status == -2){
-                        Log.i("cur","No response from server for 20 secs");
-                    }
-                    else{
-                        Log.i("cur","Interrupted");
-                    }
-                }
-            }
-        },3000); // 녹음 시간 -> 현재 3초
-
-
-    }
-
-    private void get_num(){
-        Select_Function my = new Select_Function();
-        my.Set_str(" "+ Result.replaceAll(" ",""));
-        my.Local_Alignment();
-        takePicture();
-    }
-
 }

@@ -85,14 +85,8 @@ public class Recording {
         }
     }
 
-    public byte [] get_speechData(){
-        return speechData;
-    }
     public String get_re(){
         return Result;
     }
 
-    public int get_lenSp(){
-        return lenSpeech;
-    }
 }

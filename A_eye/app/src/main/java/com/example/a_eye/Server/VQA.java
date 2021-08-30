@@ -1,7 +1,5 @@
 package com.example.a_eye.Server;
 
-import android.util.Log;
-
 import com.example.a_eye.Support.Global_variable;
 
 import org.json.JSONObject;
@@ -19,7 +17,6 @@ import javax.net.ssl.HttpsURLConnection;
 public class VQA {
 
     private String requestURL = "";
-
     public String getAns() {
 
         StringBuilder stringBuilder = new StringBuilder();
@@ -41,10 +38,13 @@ public class VQA {
             httpURLConnectionObject.setReadTimeout(19000);
             httpURLConnectionObject.setConnectTimeout(19000);
             httpURLConnectionObject.setRequestMethod("POST");
+
             // InputStream으로 서버로 부터 응답을 받겠다는 옵션.
             httpURLConnectionObject.setDoInput(true);
+
             // OutputStream으로 POST 데이터를 넘겨주겠다는 옵션.
             httpURLConnectionObject.setDoOutput(true);
+
             // head option.
             httpURLConnectionObject.setRequestProperty("Accept", "application/json");
             httpURLConnectionObject.setRequestProperty("Content-type", "application/json");

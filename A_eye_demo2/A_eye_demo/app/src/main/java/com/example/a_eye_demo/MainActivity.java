@@ -180,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
         },1000);
     }
 
-    private void catch_catpture(){//Command에서 Localignment까지 종료시 실행.
+    private void catch_catpture() { //Command에서 Localignment까지 종료시 실행.
         Timer Catch = new Timer();
         TimerTask capture = new TimerTask() {
             @Override
@@ -191,6 +191,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
+
         Catch.schedule(capture,5000,1000);
     }
 

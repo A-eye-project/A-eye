@@ -75,9 +75,8 @@ public class Select_Function  extends Application {
             num = 1;
         } else { // VQA
             num = 2;
-            Global_variable.question = my_str;
         }
-
+        Global_variable.question = my_str;
         Global_variable.choice = num;
     }
 }

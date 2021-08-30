@@ -3,14 +3,14 @@ package com.example.a_eye.Audio;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Handler;
+import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.util.Log;
 
 import com.example.a_eye.MainActivity;
-import com.example.a_eye.Support.ForegroundService;
-import com.example.a_eye.Support.Select_Function;
-import com.example.a_eye.Support.Set_Dialog;
+import com.example.a_eye.Support.Global_variable;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,28 +26,40 @@ import static androidx.core.content.ContextCompat.startActivity;
 
 public class Command implements RecognitionListener {
     // 활성 키워드
-    private static final String KWS_SEARCH = "wakeup";
-    private static final String KEYPHRASE = "adam";
+    public static final String KWS_SEARCH = "wakeup";
+    private String KEYPHRASE;
     //변수
-    public static boolean startCapture;
+    public static boolean startFunction;
     public static boolean isalive;
+
+
+    // 진동 객체
+    private Vibrator vibrator;
 
 
     private Handler mHandler = new Handler();
 
     // 디코더
-    private SpeechRecognizer recognizer;
+    public static SpeechRecognizer recognizer;
 
     private Context myContext;
 
-    public Command(Context context) {
+    public Command(Context context, String key) {
+        isalive = false;
         myContext = context;
+        vibrator = (Vibrator)context.getSystemService(context.VIBRATOR_SERVICE);
+        KEYPHRASE = key;
     }
 
     public void onSetup() {
+        Log.i("mycommand", KEYPHRASE);
         new setupTask(this).execute();
-        startCapture = false;
+        startFunction = false;
         isalive = true;
+    }
+
+    public void StartListening() {
+        recognizer.startListening(KWS_SEARCH);
     }
 
     private static class setupTask extends AsyncTask<Void, Void, Exception> {
@@ -85,25 +97,77 @@ public class Command implements RecognitionListener {
     public void onPartialResult(Hypothesis hypothesis) {
         if (hypothesis == null)
             return;
-
         String text = hypothesis.getHypstr();
         if (text.equals(KEYPHRASE)) {
-            ForegroundService.service = false;
-            cancel();
+            stop();
+            command_vive();
+            launch_fun();
+        }
+    }
+
+    private void launch_fun() { // (확인)
+        if (Global_variable.behind_app) {
+                /*
+                 어플리케이션이 감춰진 상태에서 부르는 상황 고로
+                 인식이 되면 새로운 액티비티를 불러오고 동작후 액티비티 종료하면 됨.
+                 */
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     call_main();
-
                 }
-            },500);
+            }, 500);
+        } else {
+                /*
+                어플이 전면에 나와있는 상태에서 실행 바로 음성 녹음과 동작 실행하면 됨.
+                 */
+            mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    startFunction = true;
+                }
+            }, 500);
         }
     }
+
+    private void command_vive() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createOneShot(300,10));
+        } else {
+            vibrator.vibrate(300);
+        }
+    }
+
     public void call_main(){
+        /*
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+        {
+            final ActivityManager activityManager = (ActivityManager) myContext.getSystemService(Context.ACTIVITY_SERVICE);
+            final List<ActivityManager.RecentTaskInfo> recentTasks = activityManager.getRecentTasks(Integer.MAX_VALUE, ActivityManager.RECENT_IGNORE_UNAVAILABLE);
+
+            ActivityManager.RecentTaskInfo recentTaskInfo = null;
+
+            for (int i = 0; i < recentTasks.size(); i++)
+            {
+                Log.i("pack_name",recentTasks.get(i).baseIntent.getComponent().getPackageName());
+                if (recentTasks.get(i).baseIntent.getComponent().getPackageName().contains("com.example.a_eye")) {
+                    recentTaskInfo = recentTasks.get(i);
+                    break;
+                }
+            }
+
+            if(recentTaskInfo != null && recentTaskInfo.id > -1) {
+                MainActivity.activity_die = false;
+                activityManager.moveTaskToFront(recentTaskInfo.persistentId, ActivityManager.MOVE_TASK_WITH_HOME);
+
+                return;
+            }
+        } */
+
+
         Log.i("start","call_main");
         Intent intent = new Intent(myContext, MainActivity.class);
         startActivity(myContext,intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),null);
-        //Catch.cancel();
     }
     @Override
     public void onResult(Hypothesis hypothesis) {
@@ -144,11 +208,14 @@ public class Command implements RecognitionListener {
     @Override
     public void onTimeout() {
     }
-    public void stop(){
+
+    public void stop() {
         isalive = false;
         recognizer.stop();
     }
+
     public void cancel() {
+        Log.i("mycommand_cancle",KEYPHRASE);
         recognizer.cancel();
         recognizer.shutdown();
     }

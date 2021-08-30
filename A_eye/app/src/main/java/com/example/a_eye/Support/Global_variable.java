@@ -14,17 +14,30 @@ import java.util.Base64;
 
 public class Global_variable extends Application {
     public static int choice;
-    public static Bitmap img;
+    public static Bitmap resized;
     public static String question;
     public static String imgString;
     public static String ttxString;
     public static String jsonString;
     public static JSONObject jsonObject;
+    public static boolean behind_app = false; // 어플리케이션이 전면에 나와있는지 아닌지 확인하는 변수
+    public static boolean service_alive = false;
+
+    public interface ACTION {
+        String MAIN_ACTION = "com.example.a_eye.main";
+        String START_FOREGROUND = "com.example.a_eye.start";
+        String STOP_FOREGROUND = "com.example.a_eye.stop";
+    }
+
+    public interface NOTIFICATION {
+        int FOREGROUND_SERVICE = 101;
+        String CHANNEL_ID = "A_EYE";
+    }
 
 
     @Override
     public void onCreate(){
-        img = null;
+        resized = null;
         question = "";
         ttxString = "";
         imgString = "";
@@ -38,11 +51,11 @@ public class Global_variable extends Application {
         jsonObject.accumulate("Question", question);
         jsonString = jsonObject.toString();
     }
+
     @RequiresApi(api = Build.VERSION_CODES.O)
     public static void set_imgString(boolean flag) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        if(flag == true) Bitmap.createScaledBitmap(img, 480, 620, true).compress(Bitmap.CompressFormat.PNG, 100, baos);
-        else img.compress(Bitmap.CompressFormat.PNG, 100, baos);
+        resized.compress(Bitmap.CompressFormat.PNG, 100, baos);
         byte[] bytes = baos.toByteArray();
         String temp = Base64.getEncoder().encodeToString(bytes);
         try {
