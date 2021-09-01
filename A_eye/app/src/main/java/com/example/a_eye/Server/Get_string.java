@@ -21,12 +21,14 @@ public class Get_string {
     public static String readStream(InputStream in) throws IOException {
         StringBuilder sb = new StringBuilder();
         BufferedReader r = new BufferedReader(new InputStreamReader(in),1000);
-        for (String line = r.readLine(); line != null; line =r.readLine()){
+        for (String line = r.readLine(); line != null; line =r.readLine()) {
             sb.append(line);
         }
+
         in.close();
         return sb.toString();
     }
+
     public static String sendDataAndGetResult (byte [] speechData ,int lenSpeech) {
         String openApiURL = "";
         String accessKey = "";
@@ -70,8 +72,7 @@ public class Get_string {
                 JSONObject rjObject = new JSONObject(return_obj);
                 String mys = rjObject.getString("recognized");
                 return mys;
-            }
-            else
+            } else
                 return "ERROR: " + Integer.toString(responseCode);
         } catch (Throwable t) {
             return "ERROR: " + t.toString();

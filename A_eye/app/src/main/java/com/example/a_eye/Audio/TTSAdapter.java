@@ -12,10 +12,8 @@ import java.util.Locale;
 //TTS를 편하게 사용하기 위한 TTSAdapter 클래스
 public class TTSAdapter extends AppCompatActivity implements TextToSpeech.OnInitListener {
     public static TextToSpeech tts; //TTS 객체
-    //    private String content;  //출력물
     private static TTSAdapter instance = null;
 
-    // 생성자: private
     public TTSAdapter(Context context) {
         tts = new TextToSpeech(context, this);
     }
@@ -42,10 +40,6 @@ public class TTSAdapter extends AppCompatActivity implements TextToSpeech.OnInit
 
     //TTS 마무리 짓기
     protected void finalize() {
-        tts.shutdown();
-    }
-
-    public void ttsShutdown(){
         tts.shutdown();
     }
 }

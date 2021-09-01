@@ -27,7 +27,7 @@ public class CommandService extends Service {
     // 음성인식
     public static Command command = null;
 
-    public static String mykey = "adam";
+    public static String myKey = "abracadabra";
 
     public CommandService() {}
 
@@ -43,12 +43,12 @@ public class CommandService extends Service {
         super.onCreate();
 
         // Command 생성
-        command = new Command(getApplicationContext(), mykey);
+        command = new Command(getApplicationContext(), myKey);
         command.onSetup();
     }
 
     public static void start_listening() {
-        command.recognizer.startListening(command.KWS_SEARCH);
+        command.StartListening();
     }
 
     @Override
@@ -73,6 +73,7 @@ public class CommandService extends Service {
     }
 
     public void stop() {
+        Log.d("command","service destory");
         isStarted = false;
         command.cancel();
         stopForeground(true);
@@ -100,9 +101,9 @@ public class CommandService extends Service {
         Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder =
                 new NotificationCompat.Builder(this, Global_variable.NOTIFICATION.CHANNEL_ID)
-                        .setSmallIcon(R.mipmap.ic_launcher)//drawable.splash)
-                        .setContentTitle("Service test")
-                        .setContentText("실행중")
+                        .setSmallIcon(R.mipmap.a_eye_icon_launcher) // drawable.splash
+                        .setContentTitle("음성인식")
+                        .setContentText("음성인식 서비스 실행중")
                         .setContentIntent(pendingIntent) //
                         .setOngoing(true)           // 사용자가 알림을 못지움
                         .setSound(defaultSoundUri)  // 등장시 소리

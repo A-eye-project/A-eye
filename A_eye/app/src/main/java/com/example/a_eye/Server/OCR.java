@@ -56,7 +56,6 @@ public class OCR {
         String ocrMessage = "";
 
         try {
-
             String apiURL = ocrApiUrl;
             String secretKey = ocrSecretKey;
 

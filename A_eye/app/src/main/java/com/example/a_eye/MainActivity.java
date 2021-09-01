@@ -74,7 +74,9 @@ public class MainActivity extends AppCompatActivity {
         // 마지막으로 뒤로 가기 버튼을 눌렀던 시간이 2.5초가 지나지 않았으면 종료
         if (System.currentTimeMillis() <= backKeyPressedTime + 2500) {
             if (CommandService.isStarted) stopService(serviceIntent);
+            moveTaskToBack(true);
             finish();
+            android.os.Process.killProcess(android.os.Process.myPid());
         }
     }
 
@@ -91,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     CommandService.command.startFunction = true;
                 }
-            }, 1000);
+            }, 400);
         }
     }
 
@@ -100,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
 
         // 어플리케이션이 숨겨진 경우
-        Global_variable.behind_app = true;
+        if (Camera_Fragment.permission_complete) Global_variable.behind_app = true;
         Log.d("메인", "onStop Behind 값 " + Global_variable.behind_app);
     }
 
@@ -115,8 +117,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onDestroy(){
-        Log.i("here","Destroy");
+    public void onDestroy() {
+        Log.i("메인","Destroy");
         activity_die = true;
         super.onDestroy();
     }

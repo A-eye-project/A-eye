@@ -22,7 +22,7 @@ public class Global_variable extends Application {
     public static String jsonString;
     public static JSONObject jsonObject;
     public static boolean behind_app = false; // 어플리케이션이 전면에 나와있는지 아닌지 확인하는 변수
-    public static boolean service_alive = false;
+    public static boolean result_dialog = false;
 
     public interface ACTION {
         String MAIN_ACTION = "com.example.a_eye.main";
@@ -37,7 +37,7 @@ public class Global_variable extends Application {
 
 
     @Override
-    public void onCreate(){
+    public void onCreate() {
         resized = null;
         img = null;
         question = "";
@@ -57,13 +57,15 @@ public class Global_variable extends Application {
     @RequiresApi(api = Build.VERSION_CODES.O)
     public static void set_imgString(boolean flag) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        if(flag) resized.compress(Bitmap.CompressFormat.PNG, 100, baos); // VQA
-        else img.compress(Bitmap.CompressFormat.PNG, 100, baos); // OCR
+        if (flag) resized.compress(Bitmap.CompressFormat.PNG, 100, baos); // VQA
+        else img.compress(Bitmap.CompressFormat.PNG, 100, baos);          // OCR
+
         byte[] bytes = baos.toByteArray();
         String temp = Base64.getEncoder().encodeToString(bytes);
+
         try {
             imgString = new String(temp.getBytes(), "UTF-8");
-        } catch (Exception e){
+        } catch (Exception e) {
             imgString = "";
         }
     }

@@ -31,6 +31,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.Size;
@@ -76,8 +78,6 @@ import java.util.concurrent.TimeUnit;
 
 public class Camera_Fragment extends Fragment
         implements ActivityCompat.OnRequestPermissionsResultCallback {
-
-
     /**
      * upload {@link }
      * 맨 마지막 부분
@@ -90,9 +90,7 @@ public class Camera_Fragment extends Fragment
      */
     private static Context mainContext;
     /*
-
     *My Variable
-
      */
     private Size imageDimension; //이미지 치수를 받아오고 전달하는 변수
 
@@ -106,6 +104,7 @@ public class Camera_Fragment extends Fragment
         ORIENTATIONS.append(Surface.ROTATION_180, 270);
         ORIENTATIONS.append(Surface.ROTATION_270, 180);
     }
+
     private Handler timer = new Handler();
     /**
      * Tag for the {@link Log}.
@@ -262,7 +261,8 @@ public class Camera_Fragment extends Fragment
             Image image = null;
             int rotation = getActivity().getWindowManager().getDefaultDisplay().getRotation();
             rotation = ORIENTATIONS.get(rotation);
-            try{
+
+            try {
                 image = reader.acquireLatestImage();
                 image.getFormat();
                 buffer = image.getPlanes()[0].getBuffer();
@@ -272,7 +272,7 @@ public class Camera_Fragment extends Fragment
                 bitmap = rotatingImageView(rotation,bitmap);
                 Global_variable.resized = Bitmap.createScaledBitmap(bitmap, 480, 640, true);
                 ImageUploadToServer();
-            }finally {
+            } finally {
                 if (image != null) image.close();
             }
         }
@@ -322,73 +322,6 @@ public class Camera_Fragment extends Fragment
 
     /**
      * A {@link CameraCaptureSession.CaptureCallback} that handles events related to JPEG capture.
-     */
-    /*
-    private CameraCaptureSession.CaptureCallback mCaptureCallback
-            = new CameraCaptureSession.CaptureCallback() {
-
-        private void process(CaptureResult result) {
-            switch (mState) {
-                case STATE_PREVIEW: {
-                    // We have nothing to do when the camera preview is working normally.
-                    break;
-                }
-                case STATE_WAITING_LOCK: {
-                    Integer afState = result.get(CaptureResult.CONTROL_AF_STATE);
-                    if (afState == null) {
-                        captureStillPicture();
-                    } else if (CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED == afState ||
-                            CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED == afState) {
-                        // CONTROL_AE_STATE can be null on some devices
-                        Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
-                        if (aeState == null ||
-                                aeState == CaptureResult.CONTROL_AE_STATE_CONVERGED) {
-                            mState = STATE_PICTURE_TAKEN;
-                            captureStillPicture();
-                        } else {
-                            runPrecaptureSequence();
-                        }
-                    }
-                    break;
-                }
-                case STATE_WAITING_PRECAPTURE: {
-                    // CONTROL_AE_STATE can be null on some devices
-                    Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
-                    if (aeState == null ||
-                            aeState == CaptureResult.CONTROL_AE_STATE_PRECAPTURE ||
-                            aeState == CaptureRequest.CONTROL_AE_STATE_FLASH_REQUIRED) {
-                        mState = STATE_WAITING_NON_PRECAPTURE;
-                    }
-                    break;
-                }
-                case STATE_WAITING_NON_PRECAPTURE: {
-                    // CONTROL_AE_STATE can be null on some devices
-                    Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
-                    if (aeState == null || aeState != CaptureResult.CONTROL_AE_STATE_PRECAPTURE) {
-                        mState = STATE_PICTURE_TAKEN;
-                        captureStillPicture();
-                    }
-                    break;
-                }
-            }
-        }
-
-
-        @Override
-        public void onCaptureProgressed(@NonNull CameraCaptureSession session,
-                                        @NonNull CaptureRequest request,
-                                        @NonNull CaptureResult partialResult) {
-            process(partialResult);
-        }
-
-        @Override
-        public void onCaptureCompleted(@NonNull CameraCaptureSession session,
-                                       @NonNull CaptureRequest request,
-                                       @NonNull TotalCaptureResult result) {
-            process(result);
-        }
-
-    };
      */
 
     /**
@@ -457,13 +390,15 @@ public class Camera_Fragment extends Fragment
     @Override
     public void onViewCreated(final View view, Bundle savedInstanceState) {
         mTextureView = (AutoFitTextureView) view.findViewById(R.id.texture); // 화면 그자체 com.example.android.camera2basic.AutoFitTextureView
-        //command = new Command(getContext());
     }
 
     @Override
     public void onResume() {
         super.onResume();
         startBackgroundThread();
+        
+        // 재시작 부분 고려
+        if(permission_complete == true) catch_start_recording();
 
         // When the screen is turned off and turned back on, the SurfaceTexture is already
         // available, and "onSurfaceTextureAvailable" will not be called. In that case, we can open
@@ -479,7 +414,6 @@ public class Camera_Fragment extends Fragment
     @Override
     public void onPause() {
         Log.i("here2","onStop");
-        //closeAudio();
         closeCamera();
         stopBackgroundThread();
 
@@ -531,7 +465,7 @@ public class Camera_Fragment extends Fragment
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         //권한 허용했을 경우
-        if (requestCode == 1){
+        if (requestCode == 1) {
             int length = permissions.length;
             for (int i = 0; i < length; i++) {
                 if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
@@ -668,7 +602,7 @@ public class Camera_Fragment extends Fragment
             if(permissionCheck() == false) return;
         }
 
-        if(ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(getActivity(),new String[]{
                     Manifest.permission.CAMERA
             },REQUEST_CAMERA_PERMISSION);
@@ -765,8 +699,9 @@ public class Camera_Fragment extends Fragment
     //카메라 화면이 업데이트 될 때 실행되는 메소드
     private void updatePreview() {
         Log.i("target","Update");
-        if(mCameraDevice == null) //카메라를 연결하고 업데이트 메소드를 호출했는데, 만약 카메라 장치가 null값이면 에러 출력
+        if (mCameraDevice == null) //카메라를 연결하고 업데이트 메소드를 호출했는데, 만약 카메라 장치가 null값이면 에러 출력
             Log.i("카메라 디바이스","NULL");
+
         //다시 빌더 셋팅
         mPreviewRequestBuilder.set(CaptureRequest.CONTROL_MODE,CaptureRequest.CONTROL_MODE_AUTO);
         try{
@@ -924,7 +859,8 @@ public class Camera_Fragment extends Fragment
                         bitmap = rotatingImageView(rotation,bitmap);
 
                         Global_variable.img = bitmap;
-                        // VQA랑 ImageCaption 만  이미지 조절 해야할거 같음. (확인)
+
+                        // VQA랑 ImageCaption 이미지 조절
                         Global_variable.resized = Bitmap.createScaledBitmap(bitmap, 480, 640, true);
                         ImageUploadToServer();
                     } finally {
@@ -968,46 +904,6 @@ public class Camera_Fragment extends Fragment
         }
     }
 
-    /*
-    private void captureStillPicture() {
-        try {
-            final Activity activity = getActivity();
-            if (null == activity || null == mCameraDevice) {
-                return;
-            }
-            // This is the CaptureRequest.Builder that we use to take a picture.
-            final CaptureRequest.Builder captureBuilder =
-                    mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
-            captureBuilder.addTarget(mImageReader.getSurface());
-
-            // Use the same AE and AF modes as the preview.
-            captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,
-                    CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-            setAutoFlash(captureBuilder);
-
-            // Orientation
-            int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
-            captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, getOrientation(rotation));
-
-            CameraCaptureSession.CaptureCallback CaptureCallback
-                    = new CameraCaptureSession.CaptureCallback() {
-
-                @Override
-                public void onCaptureCompleted(@NonNull CameraCaptureSession session,
-                                               @NonNull CaptureRequest request,
-                                               @NonNull TotalCaptureResult result) {
-                    unlockFocus();
-                }
-            };
-
-            mCaptureSession.stopRepeating();
-            mCaptureSession.abortCaptures();
-            mCaptureSession.capture(captureBuilder.build(), CaptureCallback, null);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-    }*/
-
     /**
      * Retrieves the JPEG orientation from the specified screen rotation.
      *
@@ -1021,37 +917,6 @@ public class Camera_Fragment extends Fragment
         // For devices with orientation of 270, we need to rotate the JPEG 180 degrees.
         return (ORIENTATIONS.get(rotation) + mSensorOrientation + 270) % 360;
     }
-
-    /**
-     * Unlock the focus. This method should be called when still image capture sequence is
-     * finished.
-     */
-    /*
-    private void unlockFocus() {
-        try {
-            // Reset the auto-focus trigger
-            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
-                    CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
-            setAutoFlash(mPreviewRequestBuilder);
-            mCaptureSession.capture(mPreviewRequestBuilder.build(), mCaptureCallback,
-                    mBackgroundHandler);
-            // After this, the camera will go back to the normal state of preview.
-            mState = STATE_PREVIEW;
-            mCaptureSession.setRepeatingRequest(mPreviewRequest, mCaptureCallback,
-                    mBackgroundHandler);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    private void setAutoFlash(CaptureRequest.Builder requestBuilder) {
-        if (mFlashSupported) {
-            requestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                    CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
-        }
-    }*/
-
 
     /**
      * Compares two {@code Size}s based on their areas.
@@ -1101,8 +966,8 @@ public class Camera_Fragment extends Fragment
 
 
     //각종 변수
-    private boolean isstart = false;
     private AsyncTaskUploadClass AsyncTaskUploadClassOBJ;
+    private Vibrator vibrator = (Vibrator)mainContext.getSystemService(mainContext.VIBRATOR_SERVICE);
     Image_Captioning imgCaptioning= new Image_Captioning();
     OCR ocr = new OCR();
     VQA vqa = new VQA();
@@ -1112,7 +977,7 @@ public class Camera_Fragment extends Fragment
     Timer Catch;
     Timer TTS;
 
-    private void catch_start_recording() { //
+    private void catch_start_recording() {
         Catch = new Timer();
         TimerTask start_recording = new TimerTask() {
             @Override
@@ -1140,6 +1005,7 @@ public class Camera_Fragment extends Fragment
                     TTS.cancel();
 
                     if (Global_variable.behind_app) {
+                        setDialog.result_dismiss();
                         getActivity().finish();
                     }
                 }
@@ -1154,9 +1020,11 @@ public class Camera_Fragment extends Fragment
     private void get_record_string(){
         if (MainActivity.activity_die == true) return;
         Recording myRecord = new Recording();
+
         new Thread(new Runnable() { //새 Thread에서 녹음 시작
             public void run() {
                 try {
+                    command_vive();
                     Log.i("cur","Recording.. ");
                     myRecord.Start_record();
                 } catch (RuntimeException e) {
@@ -1184,7 +1052,7 @@ public class Camera_Fragment extends Fragment
                     }
                 }
             }
-        },3000); // 녹음 시간 -> 현재 3초
+        },4000); // 녹음 시간 -> 현재 3초
     }
 
     private void get_num(String Result){
@@ -1193,17 +1061,16 @@ public class Camera_Fragment extends Fragment
         my.Local_Alignment();
 
         // 음성인식 종료
-        if ((Global_variable.question.contains("꺼줘") == true)||(Global_variable.question.contains("꺼져") == true)||(Global_variable.question.contains("꺼저") == true)||(Global_variable.question.contains("꿔저") == true)){
+        if ((Global_variable.question.contains("꺼줘") == true) || (Global_variable.question.contains("꺼져") == true)
+                || (Global_variable.question.contains("꺼저") == true) || (Global_variable.question.contains("꿔저") == true)) {
             getActivity().stopService(MainActivity.serviceIntent);
-            getActivity().finish();
-            //getActivity().finishAndRemoveTask();// 프로세스 종료
+            getActivity().finish(); //백그라운드 이동
         } else {
             takePicture();
         }
     }
 
     private void ImageUploadToServer(){
-        isstart = true;
         AsyncTaskUploadClassOBJ = new AsyncTaskUploadClass();
         AsyncTaskUploadClassOBJ.execute();
     }
@@ -1242,23 +1109,36 @@ public class Camera_Fragment extends Fragment
         @Override
         protected void onPreExecute() { // BackGround 작업이 시작되기 전에 맨처음에 작동하는 부분.
             super.onPreExecute();
-            setDialog.setup();
-            setDialog.show();
+            setDialog.loding_setup();
+            setDialog.loading_show();
         }
 
         @Override
         protected void onPostExecute(String string1) {// 맨 마지막에 한번만 실행되는 부분
-            catch_ttsEnd();
             super.onPostExecute(string1);
-            setDialog.dismiss();
+            catch_ttsEnd();
+            setDialog.result_setup();
+            setDialog.loading_dismiss();
             Log.i("target",string1);
 
             if (string1 != "Fail To Connect") {
                 Global_variable.ttxString = string1;
+                setDialog.result_str(string1);
                 myspeaker.speak(Global_variable.ttxString);
             } else {
+                setDialog.result_str("서버와의 연결에 실패했습니다.");
                 myspeaker.speak("서버와의 연결에 실패했습니다.");
             }
+
+            setDialog.result_show();
+        }
+    }
+
+    private void command_vive() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createOneShot(500,20));
+        } else {
+            vibrator.vibrate(500);
         }
     }
 }

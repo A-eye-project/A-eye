@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.a_eye.MainActivity"
+    android:background="@drawable/main_background_gredient">
+
+    <LinearLayout
+        android:id="@+id/signage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="150dp"
+        android:layout_marginLeft="30dp">
+
+        <TextView
+            android:id="@+id/signage_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_title"
+            android:textColor="@color/white"
+            android:textSize="90dp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/signage_sub_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_sub_title"
+            android:textColor="@color/white"
+            android:textSize="18dp"
+            android:textStyle="bold"
+            android:letterSpacing="0.3"/>
+    </LinearLayout>
+</FrameLayout>

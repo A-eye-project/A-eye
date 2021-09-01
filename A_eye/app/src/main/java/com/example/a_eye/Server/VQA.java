@@ -5,7 +5,6 @@ import com.example.a_eye.Support.Global_variable;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.ConnectException;
@@ -16,15 +15,13 @@ import javax.net.ssl.HttpsURLConnection;
 
 public class VQA {
 
-    private String requestURL = "";
+    private final String requestURL = "";
     public String getAns() {
 
         StringBuilder stringBuilder = new StringBuilder();
         try {
-
             URL url;
             HttpURLConnection httpURLConnectionObject ;
-            InputStream inputStream = null;
             OutputStream outPutStream;
             Global_variable.jsonObject = new JSONObject();
 
@@ -53,27 +50,21 @@ public class VQA {
             outPutStream.close();
             RC = httpURLConnectionObject.getResponseCode();
             if (RC == HttpsURLConnection.HTTP_OK) {
-
                 bufferedReaderObject = new BufferedReader(new InputStreamReader(httpURLConnectionObject.getInputStream()));
-
                 stringBuilder = new StringBuilder();
-
                 String RC2;
 
                 while ((RC2 = bufferedReaderObject.readLine()) != null){
-
                     stringBuilder.append(RC2);
                 }
-            }
-            else{
+            } else {
                 return "Did not work!";
             }
 
         }
-        catch (ConnectException e){
+        catch (ConnectException e) {
             return "Fail To Connect";
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             return "Fail To Connect";
         }
         return stringBuilder.toString();

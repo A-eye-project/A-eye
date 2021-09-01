@@ -38,8 +38,7 @@ public class Recording {
             lenSpeech = 0;
             if (audio.getState() != AudioRecord.STATE_INITIALIZED) {
                 throw new RuntimeException("ERROR: Failed to initialize audio device. Allow app to access microphone");
-            }
-            else {
+            } else {
                 short [] inBuffer = new short [bufferSize];
                 forceStop = false;
                 isRecording = true;
@@ -56,6 +55,7 @@ public class Recording {
                         lenSpeech++;
                     }
                 }
+
                 audio.stop();
                 audio.release();
                 isRecording = false;
@@ -64,20 +64,22 @@ public class Recording {
             throw new RuntimeException(t.toString());
         }
     }
-    public int net_com(){
+
+    public int net_com() {
         Thread threadRecog = new Thread(new Runnable() {// API 통신을 위한 Thread -> 이거 없이 메인에서 함수 부르면 Error 발생
             public void run() {
                 Result = Get_string.sendDataAndGetResult(speechData,lenSpeech);
             }
         });
+
         threadRecog.start();
+
         try {
             threadRecog.join(20000);
             if (threadRecog.isAlive()) {
                 threadRecog.interrupt();
                 return -2;// "No response from server for 20 secs";
-            }
-            else {
+            } else {
                 return 1;//"통신완료";
             }
         } catch (InterruptedException e) {
@@ -88,5 +90,4 @@ public class Recording {
     public String get_re(){
         return Result;
     }
-
 }

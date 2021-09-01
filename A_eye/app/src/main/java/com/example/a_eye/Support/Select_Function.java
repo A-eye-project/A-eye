@@ -10,8 +10,9 @@ public class Select_Function  extends Application {
     public static int Score_image;
     public static boolean OCR_Flag;
     public static int num;
+
     @Override
-    public void onCreate(){
+    public void onCreate() {
         super.onCreate();
         my_str = "";
         num = -1;
@@ -43,8 +44,8 @@ public class Select_Function  extends Application {
                 String y = sample_image[s];
                 int i,j;
                 int n = y.length();
-                //Log.i("len",Integer.toString(m) + ", " + Integer.toString(n));
                 Log.i("str",x + ", " + y);
+
                 int dp[][] = new int[n + m + 1][n + m + 1];
                 for (int[] x1 : dp)
                     Arrays.fill(x1,0);
@@ -69,13 +70,14 @@ public class Select_Function  extends Application {
             }
         }
 
-        if (OCR_Flag == true) { // OCR
+        if (OCR_Flag == true) {       // OCR
             num = 0;
         } else if(Score_image > 30) { // Image captioning
             num = 1;
-        } else { // VQA
+        } else {                      // VQA
             num = 2;
         }
+
         Global_variable.question = my_str;
         Global_variable.choice = num;
     }

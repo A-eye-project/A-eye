@@ -32,7 +32,7 @@ public class Command implements RecognitionListener {
     private String KEYPHRASE;
     //변수
     public static boolean startFunction;
-    public static boolean isalive;
+    public static boolean isalive = true;
 
 
     // 진동 객체
@@ -47,7 +47,6 @@ public class Command implements RecognitionListener {
     private Context myContext;
 
     public Command(Context context, String key) {
-        isalive = false;
         myContext = context;
         vibrator = (Vibrator)context.getSystemService(context.VIBRATOR_SERVICE);
         KEYPHRASE = key;
@@ -57,11 +56,12 @@ public class Command implements RecognitionListener {
         Log.i("mycommand", KEYPHRASE);
         new setupTask(this).execute();
         startFunction = false;
-        isalive = true;
+        command_vive();
     }
 
     public void StartListening() {
         recognizer.startListening(KWS_SEARCH);
+        isalive = true;
     }
 
     private static class setupTask extends AsyncTask<Void, Void, Exception> {
@@ -88,7 +88,7 @@ public class Command implements RecognitionListener {
             if (result != null) {
                 Log.i("error","No file");
             } else {
-                activityReference.get().recognizer.startListening(KWS_SEARCH);
+                activityReference.get().StartListening();
             }
         }
 
@@ -101,6 +101,7 @@ public class Command implements RecognitionListener {
             return;
         String text = hypothesis.getHypstr();
         if (text.equals(KEYPHRASE)) {
+            Log.d("command","Hot word!");
             stop();
             command_vive();
             launch_fun();
@@ -134,41 +135,18 @@ public class Command implements RecognitionListener {
 
     private void command_vive() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createOneShot(300,10));
+            vibrator.vibrate(VibrationEffect.createOneShot(500,10));
         } else {
-            vibrator.vibrate(300);
+            vibrator.vibrate(500);
         }
     }
 
-    public void call_main(){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            final ActivityManager activityManager = (ActivityManager) myContext.getSystemService(Context.ACTIVITY_SERVICE);
-            final List<ActivityManager.RecentTaskInfo> recentTasks = activityManager.getRecentTasks(Integer.MAX_VALUE, ActivityManager.RECENT_IGNORE_UNAVAILABLE);
-
-            ActivityManager.RecentTaskInfo recentTaskInfo = null;
-
-            for (int i = 0; i < recentTasks.size(); i++) {
-                Log.i("pack_name",recentTasks.get(i).baseIntent.getComponent().getPackageName());
-                if (recentTasks.get(i).baseIntent.getComponent().getPackageName().contains("com.example.a_eye")) {
-                    recentTaskInfo = recentTasks.get(i);
-                    break;
-                }
-            }
-
-            if (recentTaskInfo != null && recentTaskInfo.id > -1) {
-                MainActivity.activity_die = false;
-                activityManager.moveTaskToFront(recentTaskInfo.persistentId, ActivityManager.MOVE_TASK_WITH_HOME);
-
-                return;
-            }
-        }
-
-        /*
+    public void call_main() {
         Log.i("start","call_main");
         Intent intent = new Intent(myContext, MainActivity.class);
         startActivity(myContext,intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),null);
-         */
     }
+
     @Override
     public void onResult(Hypothesis hypothesis) {
         if (hypothesis != null) {
@@ -192,10 +170,11 @@ public class Command implements RecognitionListener {
                 .setAcousticModel(new File(assetsDir, "en-us-ptm"))
                 .setDictionary(new File(assetsDir, "cmudict-en-us.dict"))
                 .setRawLogDir(assetsDir)
-                .setKeywordThreshold(1e-3f)
+                .setKeywordThreshold(1e-10f)
                 .getRecognizer();
 
         recognizer.addListener(this);
+
         // Create keyword-activation search.
         recognizer.addKeyphraseSearch(KWS_SEARCH, KEYPHRASE);
     }
@@ -206,8 +185,7 @@ public class Command implements RecognitionListener {
     }
 
     @Override
-    public void onTimeout() {
-    }
+    public void onTimeout() {}
 
     public void stop() {
         isalive = false;
@@ -215,7 +193,7 @@ public class Command implements RecognitionListener {
     }
 
     public void cancel() {
-        Log.i("mycommand_cancle",KEYPHRASE);
+        Log.i("mycommand_cancle", KEYPHRASE);
         recognizer.cancel();
         recognizer.shutdown();
     }

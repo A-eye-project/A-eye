@@ -2,22 +2,22 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="rectangle">
-            <corners android:radius="70dp"/>
+            <corners android:radius="35dp"/>
             <gradient
                 android:type="linear"
                 android:angle="90"
-                android:startColor="@color/alert_startColor"
-                android:endColor="@color/alert_endColor"
+                android:startColor="@color/alert_result_startColor"
+                android:endColor="@color/alert_result_endColor"
                 />
         </shape>
     </item>
     <item>
         <shape>
-            <corners android:radius="70dp"/>
+            <corners android:radius="35dp"/>
             <gradient
                 android:type="linear"
                 android:angle="180"
-                android:startColor="@color/alert_startColor2"
+                android:startColor="@color/alert_result_startColor2"
                 />
         </shape>
     </item>

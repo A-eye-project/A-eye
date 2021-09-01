@@ -21,7 +21,6 @@ public class Image_Captioning {
 
         StringBuilder stringBuilder = new StringBuilder();
         try {
-
             URL url;
             HttpURLConnection httpURLConnectionObject ;
             OutputStream outPutStream;
@@ -41,26 +40,21 @@ public class Image_Captioning {
             outPutStream.close();
             RC = httpURLConnectionObject.getResponseCode();
             if (RC == HttpsURLConnection.HTTP_OK) {
-
                 bufferedReaderObject = new BufferedReader(new InputStreamReader(httpURLConnectionObject.getInputStream()));
-
                 stringBuilder = new StringBuilder();
-
                 String RC2;
 
                 while ((RC2 = bufferedReaderObject.readLine()) != null){
-
                     stringBuilder.append(RC2);
                 }
             }
 
         } catch (ConnectException e){
             return "Fail To Connect";
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             return "Fail To Connect";
         }
-        //Toast.makeText(MainActivity.this, Integer.toString(c),Toast.LENGTH_LONG).show();
+
         return stringBuilder.toString();
     }
 }
