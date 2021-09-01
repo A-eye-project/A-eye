@@ -1,4 +1,0 @@
-<resources>
-    <string name="app_name">A_eye_demo</string>
-    <string name="request_permission">This sample needs camera permission.</string>
-</resources>

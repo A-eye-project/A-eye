@@ -1,4 +1,0 @@
-include ':gson-2.8.7'
-include ':pocketsphinx-android-5prealpha-release'
-include ':app'
-rootProject.name = "aarImportTest"

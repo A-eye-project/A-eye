@@ -1,6 +1,0 @@
-<resources>
-    <string name="app_name">Service Test</string>
-    <string name="request_permission">This sample needs camera permission.</string>
-    <string name="camera_error">This device doesn\'t support Camera2 API.</string>
-    <string name="alert_dialog">화면을 인식하고 있습니다.</string>
-</resources>

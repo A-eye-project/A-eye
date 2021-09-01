@@ -1,3 +1,0 @@
-include ':pocketsphinx-android-5prealpha-release'
-include ':app'
-rootProject.name = "aarImportTest"

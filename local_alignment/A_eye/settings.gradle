@@ -1,3 +1,0 @@
-include ':gson-2.8.7'
-include ':app'
-rootProject.name = "A_eye"
