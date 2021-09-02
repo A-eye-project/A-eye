@@ -27,8 +27,7 @@ public class CommandService extends Service {
     // 음성인식
     public static Command command = null;
 
-    public static String myKey = "abracadabra";
-
+    // 생성자
     public CommandService() {}
 
     @Nullable
@@ -39,11 +38,10 @@ public class CommandService extends Service {
 
     @Override
     public void onCreate() {
-        Log.d("서비스", "onCreate");
         super.onCreate();
 
         // Command 생성
-        command = new Command(getApplicationContext(), myKey);
+        command = new Command(getApplicationContext(), Global_variable.myKey);
         command.onSetup();
     }
 
@@ -53,16 +51,15 @@ public class CommandService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d("서비스", "onStartCommand");
         if (intent != null) {
             String action = intent.getAction();
 
-            switch (action) {
-                case Global_variable.ACTION.START_FOREGROUND:
+            switch (action) { // Action 으로 시작 및 종료가 들어옴.
+                case Global_variable.ACTION.START_FOREGROUND: // Service 시작
                     sendNotification();
                     break;
 
-                case Global_variable.ACTION.STOP_FOREGROUND:
+                case Global_variable.ACTION.STOP_FOREGROUND: // Service 종료
                     command.cancel();
                     stopForeground(true);
                     stopSelf();
@@ -73,7 +70,6 @@ public class CommandService extends Service {
     }
 
     public void stop() {
-        Log.d("command","service destory");
         isStarted = false;
         command.cancel();
         stopForeground(true);
@@ -92,7 +88,7 @@ public class CommandService extends Service {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
 
-        // 버튼 추가
+        // 종료 버튼 추가
         Intent buttonCloseIntent = new Intent(this, CommandService.class);
         buttonCloseIntent.setAction(Global_variable.ACTION.STOP_FOREGROUND);
         PendingIntent pCloseIntent =
