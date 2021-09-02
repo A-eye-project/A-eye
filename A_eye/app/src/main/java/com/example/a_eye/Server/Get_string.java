@@ -20,8 +20,8 @@ import java.util.Map;
 public class Get_string {
     public static String readStream(InputStream in) throws IOException {
         StringBuilder sb = new StringBuilder();
-        BufferedReader r = new BufferedReader(new InputStreamReader(in),1000);
-        for (String line = r.readLine(); line != null; line =r.readLine()) {
+        BufferedReader r = new BufferedReader(new InputStreamReader(in), 1000);
+        for (String line = r.readLine(); line != null; line = r.readLine()) {
             sb.append(line);
         }
 
@@ -29,7 +29,7 @@ public class Get_string {
         return sb.toString();
     }
 
-    public static String sendDataAndGetResult (byte [] speechData ,int lenSpeech) {
+    public static String sendDataAndGetResult(byte[] speechData, int lenSpeech) {
         String openApiURL = "";
         String accessKey = "";
 
@@ -41,7 +41,7 @@ public class Get_string {
         Map<String, String> argument = new HashMap<>();
 
         audioContents = Base64.encodeToString(
-                speechData, 0, lenSpeech*2, Base64.NO_WRAP);
+                speechData, 0, lenSpeech * 2, Base64.NO_WRAP);
 
         argument.put("language_code", "korean");
         argument.put("audio", audioContents);
@@ -54,7 +54,7 @@ public class Get_string {
         String responBody;
         try {
             url = new URL(openApiURL);
-            HttpURLConnection con = (HttpURLConnection)url.openConnection();
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setDoOutput(true);
 
@@ -64,7 +64,7 @@ public class Get_string {
             wr.close();
 
             responseCode = con.getResponseCode();
-            if ( responseCode == 200 ) {
+            if (responseCode == 200) {
                 InputStream is = new BufferedInputStream(con.getInputStream());
                 responBody = readStream(is);
                 JSONObject jObject = new JSONObject(responBody);

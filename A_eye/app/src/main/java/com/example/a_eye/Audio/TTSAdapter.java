@@ -8,7 +8,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.Locale;
 
-
 //TTS를 편하게 사용하기 위한 TTSAdapter 클래스
 public class TTSAdapter extends AppCompatActivity implements TextToSpeech.OnInitListener {
     public static TextToSpeech tts; //TTS 객체

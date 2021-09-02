@@ -24,7 +24,7 @@ public class OCR {
 
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private String getReqMessage(){
+    private String getReqMessage() {
         String requestBody = "";
 
         try {
@@ -45,14 +45,14 @@ public class OCR {
             json.put("images", images);
 
             requestBody = json.toString();
-        } catch (Exception e){
+        } catch (Exception e) {
             System.out.println("Json Exception : " + e);
         }
         return requestBody;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public String reqOcr(){ // img = BitmapToString(bitmap);
+    public String reqOcr() { // img = BitmapToString(bitmap);
         String ocrMessage = "";
 
         try {
@@ -66,7 +66,7 @@ public class OCR {
 
             long timestamp = new Date().getTime();
 
-            HttpURLConnection con = (HttpURLConnection)url.openConnection();
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Content-Type", "application/json;UTF-8");
             con.setRequestProperty("X-OCR-SECRET", secretKey);
@@ -80,7 +80,7 @@ public class OCR {
 
             int responseCode = con.getResponseCode();
 
-            if(responseCode==200) { // 정상 호출
+            if (responseCode == 200) { // 정상 호출
                 System.out.println(con.getResponseMessage());
 
                 BufferedReader in = new BufferedReader(
@@ -104,7 +104,7 @@ public class OCR {
         return ocrMessage;
     }
 
-    public String getOcrRes(){
+    public String getOcrRes() {
         String ocrRes = "";
 
         try {
@@ -113,14 +113,14 @@ public class OCR {
             JSONObject images_json = images.getJSONObject(0);
             JSONArray fields = images_json.getJSONArray("fields");
 
-            for(int i = 0; i < fields.length(); ++i){
+            for (int i = 0; i < fields.length(); ++i) {
                 ocrRes += " " + fields.getJSONObject(i).get("inferText");
                 //ocrRes += fields.getJSONObject(i).get("inferText");
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             ;
         }
-        if (ocrRes == ""){
+        if (ocrRes == "") {
             ocrRes = "아무 내용도 없습니다";
         }
 

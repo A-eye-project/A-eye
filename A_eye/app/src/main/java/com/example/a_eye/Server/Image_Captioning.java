@@ -22,10 +22,9 @@ public class Image_Captioning {
         StringBuilder stringBuilder = new StringBuilder();
         try {
             URL url;
-            HttpURLConnection httpURLConnectionObject ;
+            HttpURLConnection httpURLConnectionObject;
             OutputStream outPutStream;
-            BufferedWriter bufferedWriterObject ;
-            BufferedReader bufferedReaderObject ;
+            BufferedReader bufferedReaderObject;
             int RC;
             url = new URL(requestURL);
             httpURLConnectionObject = (HttpURLConnection) url.openConnection();
@@ -44,12 +43,12 @@ public class Image_Captioning {
                 stringBuilder = new StringBuilder();
                 String RC2;
 
-                while ((RC2 = bufferedReaderObject.readLine()) != null){
+                while ((RC2 = bufferedReaderObject.readLine()) != null) {
                     stringBuilder.append(RC2);
                 }
             }
 
-        } catch (ConnectException e){
+        } catch (ConnectException e) {
             return "Fail To Connect";
         } catch (Exception e) {
             return "Fail To Connect";

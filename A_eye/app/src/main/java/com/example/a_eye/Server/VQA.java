@@ -16,18 +16,18 @@ import javax.net.ssl.HttpsURLConnection;
 public class VQA {
 
     private final String requestURL = "";
+
     public String getAns() {
 
         StringBuilder stringBuilder = new StringBuilder();
         try {
             URL url;
-            HttpURLConnection httpURLConnectionObject ;
+            HttpURLConnection httpURLConnectionObject;
             OutputStream outPutStream;
             Global_variable.jsonObject = new JSONObject();
 
 
-
-            BufferedReader bufferedReaderObject ;
+            BufferedReader bufferedReaderObject;
             int RC;
 
             url = new URL(requestURL);
@@ -54,15 +54,14 @@ public class VQA {
                 stringBuilder = new StringBuilder();
                 String RC2;
 
-                while ((RC2 = bufferedReaderObject.readLine()) != null){
+                while ((RC2 = bufferedReaderObject.readLine()) != null) {
                     stringBuilder.append(RC2);
                 }
             } else {
                 return "Did not work!";
             }
 
-        }
-        catch (ConnectException e) {
+        } catch (ConnectException e) {
             return "Fail To Connect";
         } catch (Exception e) {
             return "Fail To Connect";
