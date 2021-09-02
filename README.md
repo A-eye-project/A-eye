@@ -1,12 +1,12 @@
 # A-eye
 
 ## Requirements
-### For App
-```
-
+###### For App
 ```
 <br />
-### For Server
+```
+<br />
+###### For Server
 ```
 Ubuntu 18.04 
 python 3.7
@@ -17,5 +17,5 @@ At least 7GB VRAM
 <br />
 ## How to Use
 ```
-
+<br />
 ```
