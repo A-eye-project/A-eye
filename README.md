@@ -1,21 +1,21 @@
 # A-eye
 
 ## Requirements
-###### For App
+#### For Application
 ```
-<br />
+
 ```
-<br />
-###### For Server
+
+#### For Server
 ```
-Ubuntu 18.04 
+Ubuntu 18.04 or 20.04
 python 3.7
 pytorch 1.7.1 
 CUDA 10.X or 11.X
 At least 7GB VRAM
 ```
-<br />
+
 ## How to Use
 ```
-<br />
+
 ```
