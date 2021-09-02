@@ -1,0 +1,3 @@
+[submodule "server/Oscar_Scripts"]
+	path = server/Oscar_Scripts
+	url = https://github.com/Alcoholrithm/Oscar_Scripts.git
