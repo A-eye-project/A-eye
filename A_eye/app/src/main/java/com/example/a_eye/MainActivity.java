@@ -30,10 +30,13 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.i("status","onCreate");
+        Log.i("status", "onCreate");
         super.onCreate(savedInstanceState);
         checkPermission();
         activity_die = false;
+
+        // 어플리케이션이 숨겨져 있다가 다시 전면으로 나옴.
+        Global_variable.behind_app = false;
 
         // 핸드폰 상단 시스템바 투명하게 해주는 부분
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -54,15 +57,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume(){
         super.onResume();
     }
+
     private void makeToast(String msg) {
         makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
     }
 
-    //뒤로가기 버튼 눌렀을 때
+    // 뒤로가기 버튼 눌렀을 때
     // 마지막으로 뒤로 가기 버튼을 눌렀던 시간 저장
     private long backKeyPressedTime = 0;
     // 첫 번째 뒤로 가기 버튼을 누를 때 표시
-
     @Override
     public void onBackPressed() {
         if (System.currentTimeMillis() > backKeyPressedTime + 2500) {
@@ -70,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
             makeToast("뒤로 가기 버튼을 한 번 더 누르시면 종료됩니다.");
             return;
         }
+
         // 마지막으로 뒤로 가기 버튼을 눌렀던 시간에 2.5초를 더해 현재 시간과 비교 후
         // 마지막으로 뒤로 가기 버튼을 눌렀던 시간이 2.5초가 지나지 않았으면 종료
         if (System.currentTimeMillis() <= backKeyPressedTime + 2500) {
@@ -84,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
-        if (Global_variable.behind_app) { // 녹음 시작 및 카메라 액션이랑 이미지 업로드
+        if (Global_variable.call_service) { // 녹음 시작 및 카메라 액션이랑 이미지 업로드
             Camera_Fragment.permission_complete = false;
 
             Handler handler = new Handler();
@@ -102,23 +106,16 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
 
         // 어플리케이션이 숨겨진 경우
-        if (Camera_Fragment.permission_complete) Global_variable.behind_app = true;
-        Log.d("메인", "onStop Behind 값 " + Global_variable.behind_app);
+        Global_variable.behind_app = true;
     }
 
     @Override
     protected void onRestart() {
-        Log.d("메인","onRestart");
         super.onRestart();
-
-        // 어플리케이션이 숨겨져 있다가 다시 전면으로 나옴.
-        Global_variable.behind_app = false;
-        Log.d("메인", "onRestart Behind 값 " + Global_variable.behind_app);
     }
 
     @Override
     public void onDestroy() {
-        Log.i("메인","Destroy");
         activity_die = true;
         super.onDestroy();
     }

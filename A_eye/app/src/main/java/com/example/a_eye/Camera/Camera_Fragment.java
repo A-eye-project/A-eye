@@ -396,9 +396,11 @@ public class Camera_Fragment extends Fragment
     public void onResume() {
         super.onResume();
         startBackgroundThread();
-        
+
         // 재시작 부분 고려
-        if(permission_complete == true) catch_start_recording();
+        if(permission_complete == true) {
+            catch_start_recording();
+        }
 
         // When the screen is turned off and turned back on, the SurfaceTexture is already
         // available, and "onSurfaceTextureAvailable" will not be called. In that case, we can open
@@ -1000,12 +1002,13 @@ public class Camera_Fragment extends Fragment
             @Override
             public void run() {
                 if (myspeaker.tts.isSpeaking() == false) {
+                    setDialog.result_dismiss();
                     CommandService.start_listening();
                     catch_start_recording();
                     TTS.cancel();
 
-                    if (Global_variable.behind_app) {
-                        setDialog.result_dismiss();
+                    if (Global_variable.call_service) {
+                        Global_variable.call_service = false;
                         getActivity().finish();
                     }
                 }
@@ -1041,7 +1044,7 @@ public class Camera_Fragment extends Fragment
                 Log.i("cur","Reconizing.. ");
                 int status = myRecord.net_com(); // 녹음 파일 -> String으로 바꾸는 API 통신 , return값은 통신 상태
                 if(status == 1){
-                    String Result = myRecord.get_re();
+                    String Result = myRecord.get_result();
                     Log.i("cur",Result);
                     get_num(Result);
                 } else {

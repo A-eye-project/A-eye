@@ -1,6 +1,5 @@
 package com.example.a_eye.Audio;
 
-import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -16,7 +15,6 @@ import com.example.a_eye.Support.Global_variable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.util.List;
 
 import edu.cmu.pocketsphinx.Assets;
 import edu.cmu.pocketsphinx.Hypothesis;
@@ -30,30 +28,30 @@ public class Command implements RecognitionListener {
     // 활성 키워드
     public static final String KWS_SEARCH = "wakeup";
     private String KEYPHRASE;
+
     //변수
     public static boolean startFunction;
-    public static boolean isalive = true;
-
 
     // 진동 객체
     private Vibrator vibrator;
 
-
+    // 핸들러
     private Handler mHandler = new Handler();
 
     // 디코더
     public static SpeechRecognizer recognizer;
 
+    // Main context
     private Context myContext;
 
     public Command(Context context, String key) {
         myContext = context;
-        vibrator = (Vibrator)context.getSystemService(context.VIBRATOR_SERVICE);
+        vibrator = (Vibrator) context.getSystemService(context.VIBRATOR_SERVICE);
         KEYPHRASE = key;
     }
 
     public void onSetup() {
-        Log.i("mycommand", KEYPHRASE);
+        Log.i("Command", KEYPHRASE);
         new setupTask(this).execute();
         startFunction = false;
         command_vive();
@@ -61,7 +59,6 @@ public class Command implements RecognitionListener {
 
     public void StartListening() {
         recognizer.startListening(KWS_SEARCH);
-        isalive = true;
     }
 
     private static class setupTask extends AsyncTask<Void, Void, Exception> {
@@ -86,7 +83,7 @@ public class Command implements RecognitionListener {
         @Override
         protected void onPostExecute(Exception result) {
             if (result != null) {
-                Log.i("error","No file");
+                Log.i("error", "No file");
             } else {
                 activityReference.get().StartListening();
             }
@@ -101,7 +98,7 @@ public class Command implements RecognitionListener {
             return;
         String text = hypothesis.getHypstr();
         if (text.equals(KEYPHRASE)) {
-            Log.d("command","Hot word!");
+            Log.d("Command", "Hot word!");
             stop();
             command_vive();
             launch_fun();
@@ -135,16 +132,16 @@ public class Command implements RecognitionListener {
 
     private void command_vive() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createOneShot(500,10));
+            vibrator.vibrate(VibrationEffect.createOneShot(500, 10));
         } else {
             vibrator.vibrate(500);
         }
     }
 
     public void call_main() {
-        Log.i("start","call_main");
         Intent intent = new Intent(myContext, MainActivity.class);
-        startActivity(myContext,intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),null);
+        Global_variable.call_service = true;
+        startActivity(myContext, intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), null);
     }
 
     @Override
@@ -170,7 +167,7 @@ public class Command implements RecognitionListener {
                 .setAcousticModel(new File(assetsDir, "en-us-ptm"))
                 .setDictionary(new File(assetsDir, "cmudict-en-us.dict"))
                 .setRawLogDir(assetsDir)
-                .setKeywordThreshold(1e-10f)
+                .setKeywordThreshold(Global_variable.speech_threshold)
                 .getRecognizer();
 
         recognizer.addListener(this);
@@ -181,19 +178,19 @@ public class Command implements RecognitionListener {
 
     @Override
     public void onError(Exception error) {
-        Log.i("error","Error");
+        Log.i("error", "Error");
     }
 
     @Override
-    public void onTimeout() {}
+    public void onTimeout() {
+    }
 
     public void stop() {
-        isalive = false;
         recognizer.stop();
     }
 
     public void cancel() {
-        Log.i("mycommand_cancle", KEYPHRASE);
+        Log.i("Command cancel", KEYPHRASE);
         recognizer.cancel();
         recognizer.shutdown();
     }
