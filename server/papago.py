@@ -1,13 +1,14 @@
-import os
-import sys
 import urllib.request
 import json
+import yaml
 
 class translator():
     def __init__(self):
-        self.client_id = ""
-        self.client_secret = ""
-        self.url = ""
+        with open('papago_data.yaml') as f:
+            data = yaml.load(f, Loader=yaml.FullLoader)
+        self.client_id = data['client_id']
+        self.client_secret = data['client_secret']
+        self.url = "https://naveropenapi.apigw.ntruss.com/nmt/v1/translation"
 
     def en2ko(self, en):
         data = "source=en&target=ko&text=" + en
