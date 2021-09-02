@@ -3,6 +3,7 @@
 ## Requirements
 ### For App
 ```
+
 ```
 <br />
 ### For Server
@@ -16,4 +17,5 @@ At least 7GB VRAM
 <br />
 ## How to Use
 ```
+
 ```
