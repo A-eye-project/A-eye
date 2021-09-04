@@ -18,7 +18,8 @@ public class Set_Dialog {
     private Context myContext;
     private AlertDialog loadDialog;
     private AlertDialog resultDialog;
-    private TextView resultText;
+    private TextView resultQuest;
+    private TextView resultAns;
     private Handler handler = new Handler();
 
     public Set_Dialog(Context main) {
@@ -41,7 +42,8 @@ public class Set_Dialog {
         View view = inflater.inflate(R.layout.result_alertdialog, null);
         TextView resultTitle = (TextView) view.findViewById(R.id.result_title);
         resultTitle.setPaintFlags(Paint.UNDERLINE_TEXT_FLAG);
-        resultText = (TextView) view.findViewById(R.id.result_text);
+        resultQuest = (TextView) view.findViewById(R.id.result_Q);
+        resultAns = (TextView) view.findViewById(R.id.result_A);
         Button noBtn = (Button) view.findViewById(R.id.result_button);
         AlertDialog.Builder builder = new AlertDialog.Builder(myContext);
         builder.setView(view);
@@ -64,8 +66,9 @@ public class Set_Dialog {
         loadDialog.dismiss();
     }
 
-    public void result_str(String str) {
-        resultText.setText(str);
+    public void result_str(String qst, String ans) {
+        resultQuest.setText(qst);
+        resultAns.setText(ans);
     }
 
     public void result_show() {

@@ -1,9 +1,9 @@
 <resources>
-    <string name="app_name">A_eye</string>
+    <string name="app_name">A EYE</string>
     <string name="request_permission">This sample needs camera permission.</string>
     <string name="camera_error">This device doesn\'t support Camera2 API.</string>
     <string name="alert_loading_dialog">화면을 인식하고 있습니다.</string>
-    <string name="alert_result_title">이미지 탐색 결과입니다.\n</string>
+    <string name="alert_result_title">이미지 탐색 결과입니다.</string>
     <string name="alert_result_button">확인</string>
     <string name="app_title">A EYE</string>
     <string name="app_sub_title">귀로 여는 세상의 창</string>

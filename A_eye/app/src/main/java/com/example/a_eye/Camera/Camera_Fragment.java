@@ -1126,10 +1126,10 @@ public class Camera_Fragment extends Fragment
 
             if (string1 != "Fail To Connect") {
                 Global_variable.ttxString = string1;
-                setDialog.result_str(string1);
+                setDialog.result_str(Global_variable.question, Global_variable.ttxString);
                 myspeaker.speak(Global_variable.ttxString);
             } else {
-                setDialog.result_str("서버와의 연결에 실패했습니다.");
+                setDialog.result_str("", "서버와의 연결에 실패했습니다.");
                 myspeaker.speak("서버와의 연결에 실패했습니다.");
             }
 
@@ -1139,9 +1139,9 @@ public class Camera_Fragment extends Fragment
 
     private void command_vive() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createOneShot(500,20));
+            vibrator.vibrate(VibrationEffect.createOneShot(200,20));
         } else {
-            vibrator.vibrate(500);
+            vibrator.vibrate(200);
         }
     }
 }
