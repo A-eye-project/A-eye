@@ -1,15 +1,17 @@
 # A-eye
 
-## Installation For Server
+## 소개글 / Introduction
+
+## 서버 설치 절차 / Installation For Server
  
-## Requirements
-#### For Application
+## 요구 사항 / Requirements
+#### 어플리케이션 / For Application
 ```
 
 ```
 
-#### For Server
-##### Library Requirements
+#### 서버 / For Server
+##### 라이브러리 / Library Requirements
 ```
 pytorch 1.7.1
 torchvision that matches the pytorch installation
@@ -35,7 +37,7 @@ json
 base64
 ```
 
-##### System Requirements
+##### 시스템 사양 / System Requirements
 ```
 Ubuntu 18.04 or 20.04
 python 3.7
@@ -44,7 +46,7 @@ At least 7GB VRAM
 GCC or MSVC
 ```
 
-## How to Use
+## 사용법 / How to Use
 ```
 
 ```
